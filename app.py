@@ -52,7 +52,7 @@ def exibir_cardapio_string():
     for sabor, detalhes in CARDAPIO.items():
         sabor_formatado = sabor.replace("_", " ").title()
         ingredientes_str = ", ".join(detalhes['ingredientes'])
-        cardapio_str += f"- {sabor_formatado}: R$ {detalhes['preco']:.2f} - Ingredientes: {ingredientes_str}.\n"
+        cardapio_str += f"- *{sabor_formatado}*: R$ {detalhes['preco']:.2f}\n  _Ingredientes: {ingredientes_str}._\n"
     cardapio_str += "----------------------"
     return cardapio_str
 
@@ -70,12 +70,21 @@ def processar_pedido_bot(user_message, session_data):
 
         if sabor_input == 'fim':
             if session_data['current_order']:
-                resumo = "Seu pedido foi finalizado com sucesso!\nResumo do Pedido:\n"
+                resumo = "Seu pedido foi finalizado com sucesso!\n*Resumo do Pedido:*\n"
                 for sabor_final, quantidade_final in session_data['current_order'].items():
-                    resumo += f"{quantidade_final}x {sabor_final.replace('_', ' ').title()} - (R$ {CARDAPIO[sabor_final]['preco']:.2f} cada)\n"
-                resumo += f"Total: R$ {session_data['order_total']:.2f}\nQual seu endereço para entrega?"
-                session_data['state'] = 'awaiting_address'
-                response_message = resumo
+                    resumo += f"*{quantidade_final}x {sabor_final.replace('_', ' ').title()}* (R$ {CARDAPIO[sabor_final]['preco']:.2f} cada)\n"
+                session_data['subtotal_pedido'] = session_data['order_total'] # Salva o subtotal antes da entrega
+                resumo += f"*Subtotal: R$ {session_data['order_total']:.2f}*\n\n"
+                
+                # Transição para escolha de pagamento
+                response_message = resumo + (
+                    "Agora, por favor, escolha a forma de pagamento:\n"
+                    "1. Espécie\n"
+                    "2. Cartão\n"
+                    "3. Pix"
+                )
+                session_data['state'] = 'awaiting_payment_method'
+                return response_message, session_data
             else:
                 response_message = "Nenhum item adicionado ao pedido. Digite o sabor da pizza ou 'cancelar'."
         elif sabor_input == 'cancelar':
@@ -93,7 +102,7 @@ def processar_pedido_bot(user_message, session_data):
             if matched_sabor:
                 session_data['awaiting_quantity_for'] = matched_sabor
                 session_data['state'] = 'awaiting_quantity'
-                response_message = f"Certo, {matched_sabor.title()}! Quantas pizzas de {matched_sabor.title()} você gostaria?"
+                response_message = f"Certo, *{matched_sabor.title()}*! Quantas pizzas de *{matched_sabor.title()}* você gostaria?"
             else:
                 response_message = "Desculpe, esse sabor não está no cardápio ou não entendi. Tente um sabor válido ou 'cardápio'."
 
@@ -108,23 +117,80 @@ def processar_pedido_bot(user_message, session_data):
                 session_data['current_order'][sabor] = session_data['current_order'].get(sabor, 0) + quantidade
                 session_data['order_total'] += preco_pizza * quantidade
                 session_data['state'] = 'awaiting_flavor'
-                response_message = f"{quantidade}x {sabor.title()} adicionada(s) ao seu pedido.\nDigite outro sabor ou 'fim' para finalizar."
+                response_message = f"*{quantidade}x {sabor.title()}* adicionada(s) ao seu pedido.\n\nDigite outro sabor ou *'fim'* para finalizar."
         except ValueError:
             response_message = "Entrada inválida. Por favor, insira um número inteiro para a quantidade."
+            
+    elif current_state == 'awaiting_payment_method':
+        opcao_pagamento = user_message.lower().strip()
+        if opcao_pagamento in ['1', 'espécie', 'especie']:
+            session_data['payment_method'] = 'Espécie'
+            response_message = "*Pagamento em Espécie confirmado!* Por favor, informe seu endereço para entrega."
+            session_data['state'] = 'awaiting_address'
+        elif opcao_pagamento in ['2', 'cartão', 'cartao']:
+            session_data['payment_method'] = 'Cartão'
+            response_message = "*Pagamento em Cartão confirmado!* Por favor, informe seu endereço para entrega."
+            session_data['state'] = 'awaiting_address'
+        elif opcao_pagamento in ['3', 'pix']:
+            session_data['payment_method'] = 'Pix'
+            # A chave PIX pode ser uma variável de ambiente ou configuração real
+            PIX_KEY = os.getenv("PIX_KEY", "111.222.333-44 (CPF)") # Chave PIX simulada
+            response_message = f"*Pagamento via Pix selecionado!* Por favor, faça a transferência para:\n\n*Chave-Pix para o pagamento:* {PIX_KEY}\n\nApós realizar o Pix, me informe seu endereço para entrega."
+            session_data['state'] = 'awaiting_address' # Já passa para o endereço
+        else:
+            response_message = (
+                "Opção de pagamento inválida. Por favor, escolha '1' (Espécie), '2' (Cartão) ou '3' (Pix)."
+            )
+        return response_message, session_data
 
     elif current_state == 'awaiting_address':
         session_data['address'] = user_message.strip()
         response_message = (
-            f"Confirmado! Seu pedido totalizou R$ {session_data['order_total']:.2f} e será entregue em: {session_data['address']}.\n"
-            "Aguarde a confirmação final de um de nossos atendentes.\n"
-            "Obrigado por escolher a Pizzaria Delícia!"
+            f"Endereço: _{session_data['address']}_ confirmado! Agora, para calcularmos a taxa de entrega, por favor, me diga *quantos KM* (quilômetros) é o seu endereço da pizzaria."
+            "\n\n_(Ex: '1.5', '2', '3.8')_"
         )
-        session_data['current_order'] = {}
-        session_data['order_total'] = 0.0
-        session_data['address'] = ''
-        session_data['state'] = 'initial'
+        session_data['state'] = 'awaiting_delivery_distance'
+        return response_message, session_data
+    
+    elif current_state == 'awaiting_delivery_distance':
+        try:
+            distance_km = float(user_message.replace(',', '.').strip()) # Permite vírgula ou ponto
+            delivery_fee = 0.0
+            if 0 < distance_km <= 2:
+                delivery_fee = 7.00
+            elif distance_km > 2:
+                delivery_fee = 10.00
+            else:
+                response_message = "Distância inválida. Por favor, digite um número maior que zero para os KM."
+                return response_message, session_data
+            
+            session_data['delivery_fee'] = delivery_fee
+            session_data['final_total'] = session_data['subtotal_pedido'] + delivery_fee
+
+            response_message = (
+                f"*Taxa de entrega:* R$ {delivery_fee:.2f} (baseado em {distance_km:.1f} KM).\n"
+                f"*Total do Pedido (com entrega):* R$ {session_data['final_total']:.2f}\n"
+                f"*Forma de Pagamento:* {session_data['payment_method']}\n"
+                f"*Endereço de Entrega:* _{session_data['address']}_"
+                "\n\n*Seu pedido foi enviado para nossa equipe!* Em breve você receberá a confirmação final. "
+                "*Obrigado por escolher a Pizzaria Delícia!* 🍕"
+            )
+            # Limpa o estado da sessão após finalizar o pedido
+            session_data['current_order'] = {}
+            session_data['order_total'] = 0.0
+            session_data['subtotal_pedido'] = 0.0
+            session_data['delivery_fee'] = 0.0
+            session_data['final_total'] = 0.0
+            session_data['address'] = ''
+            session_data['payment_method'] = ''
+            session_data['state'] = 'initial'
+            return response_message, session_data
         
-    return response_message, session_data
+        except ValueError:
+            response_message = "Distância inválida. Por favor, digite apenas números para os KM (ex: '1.5' ou '3')."
+            return response_message, session_data
+            
+    return "Desculpe, não entendi. Você pode tentar 'cardápio' ou 'pedido'?", session_data
 
 # --- FUNÇÃO DE IA PARA RESUMIR CONVERSA ---
 def resumir_conversa_com_ia(chat_history):
@@ -279,26 +345,32 @@ def webhook():
             bot_response = saudacao_string()
         elif user_input_normalized == '1':
             # --- Explicação para o Cardápio (APENAS O CARDÁPIO) ---
-            bot_response = exibir_cardapio_string() + "\n\n" + saudacao_string() # <--- ALTERADO AQUI
+            bot_response = (
+                "🍕 *Seja bem-vindo ao nosso delicioso Cardápio!* 🍕\n\n"
+                "Prepare-se para escolher sua pizza favorita. Temos opções para todos os gostos:\n\n"
+                f"{exibir_cardapio_string()}" # A função já formata com * e _
+                "\n\nPara fazer seu pedido, digite *'2'*. Se precisar de ajuda, digite *'3'*."
+            )
         elif user_input_normalized == '2':
             # --- Explicação para Fazer Pedido ---
             response_message_intro = (
-                "Certo! Para fazer seu pedido, siga estes passos:\n"
-                "1. Digite o **sabor da pizza** que você deseja.\n"
-                "2. Em seguida, o bot perguntará a **quantidade**.\n"
-                "3. Você pode adicionar quantos sabores quiser. Quando terminar, digite **'fim'**.\n"
-                "4. Se mudar de ideia a qualquer momento, digite **'cancelar'**.\n\n"
-                "Aqui estão os sabores disponíveis para começar:\n"
+                "✨ *Vamos montar seu pedido!* ✨\n\n"
+                "Para adicionar pizzas ao seu carrinho, siga estes passos simples:\n"
+                "1️⃣ Digite o *nome exato* do sabor da pizza.\n"
+                "2️⃣ Em seguida, informe a *quantidade* desejada.\n"
+                "3️⃣ Para adicionar mais sabores, basta repetir o processo.\n"
+                "4️⃣ Quando tiver tudo, digite a palavra *'fim'* para finalizar.\n"
+                "5️⃣ Se precisar cancelar o pedido a qualquer momento, digite *'cancelar'*.\n\n"
+                "*Sabores disponíveis:*\n"
             )
-            # Reutiliza a exibição do cardápio para mostrar os sabores
-            sabores_disponiveis = ", ".join([s.replace("_", " ").title() for s in CARDAPIO.keys()])
-            bot_response = response_message_intro + f"{sabores_disponiveis}\n\nQual sabor você gostaria de adicionar?"
+            sabores_disponiveis = ", ".join([f"*{s.replace('_', ' ').title()}*" for s in CARDAPIO.keys()])
+            bot_response = response_message_intro + f"{sabores_disponiveis}\n\nQual sabor de pizza você gostaria de adicionar primeiro?"
             user_session['state'] = 'awaiting_flavor'
         elif user_input_normalized == '3':
             bot_response = falar_com_atendente_inteligente(from_number, user_session)
             user_session['state'] = 'initial'
         elif user_input_normalized == '4':
-            bot_response = "Obrigado por usar nosso serviço! Até logo!"
+            bot_response = "Obrigado por usar nosso serviço! Volte sempre! 👋"
             user_sessions.pop(from_number, None)
         else:
             bot_response = "Desculpe, não entendi. Por favor, escolha uma das opções (1-4)."
