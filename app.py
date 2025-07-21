@@ -228,7 +228,11 @@ def webhook():
     
     try:
         user_message = request.form.get('Body', '').strip() # Conteúdo da mensagem
-        from_number = request.form.get('From', '').replace('whatsapp:', '') # Número do remetente
+        from_number = request.form.get('From', '').replace('whatsapp:', '') # Número do remetente (remove o prefixo 'whatsapp:')
+        
+        if not user_message and not from_number:
+            print("Webhook POST recebido sem Body ou From (possivelmente notificação de status da Twilio). Ignorando.")
+            return jsonify({"status": "ignored", "message": "No relevant message data."}), 200
 
     except Exception as e:
         print(f"Erro ao extrair dados do webhook da Twilio: {e}. Dados recebidos: {request.form}")
