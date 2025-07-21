@@ -22,7 +22,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 # --- Configuração da Twilio (BSP) ---
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER") # Formato: whatsapp:+1234567890
+TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER")
 
 if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN or not TWILIO_WHATSAPP_NUMBER:
     print("ATENÇÃO: Credenciais da Twilio incompletas. O envio de mensagens via WhatsApp pode não funcionar.")
@@ -210,7 +210,6 @@ def webhook():
         token = request.args.get("hub.verify_token")
         challenge = request.args.get("hub.challenge")
 
-        # Este token DEVE ser definido no seu .env ou nas variáveis de ambiente do Render!
         VERIFY_TOKEN = os.getenv("VERIFY_TOKEN", "SEU_TOKEN_DE_VERIFICACAO_SECRETO")
 
         if mode == "subscribe" and token == VERIFY_TOKEN:
@@ -239,7 +238,7 @@ def webhook():
         
         # Fallback para outros BSPs (API da Meta JSON)
         elif request.is_json:
-            data = request.json
+            data = request.json # A variável 'data' é definida AQUI se a requisição for JSON.
             entry = data.get('entry', [])
             if not entry: raise ValueError("No 'entry' found in webhook data.")
             changes = entry[0].get('changes', [])
@@ -279,9 +278,26 @@ def webhook():
         if "olá" in user_input_normalized or "oi" in user_input_normalized:
             bot_response = saudacao_string()
         elif user_input_normalized == '1':
-            bot_response = exibir_cardapio_string()
+            # --- Explicação para o Cardápio ---
+            bot_response = (
+                "Aqui está o nosso cardápio de pizzas:\n\n"
+                f"{exibir_cardapio_string()}\n\n"
+                "Para fazer um pedido, digite '2' ou 'fazer pedido'. "
+                "Para falar com um atendente, digite '3'."
+            )
         elif user_input_normalized == '2':
-            bot_response, user_session = processar_pedido_bot("iniciar", user_session)
+            # --- Explicação para Fazer Pedido ---
+            response_message_intro = (
+                "Certo! Para fazer seu pedido, siga estes passos:\n"
+                "1. Digite o **sabor da pizza** que você deseja.\n"
+                "2. Em seguida, o bot perguntará a **quantidade**.\n"
+                "3. Você pode adicionar quantos sabores quiser. Quando terminar, digite **'fim'**.\n"
+                "4. Se mudar de ideia a qualquer momento, digite **'cancelar'**.\n\n"
+                "Aqui estão os sabores disponíveis para começar:\n"
+            )
+            # Reutiliza a exibição do cardápio para mostrar os sabores
+            sabores_disponiveis = ", ".join([s.replace("_", " ").title() for s in CARDAPIO.keys()])
+            bot_response = response_message_intro + f"{sabores_disponiveis}\n\nQual sabor você gostaria de adicionar?"
             user_session['state'] = 'awaiting_flavor'
         elif user_input_normalized == '3':
             bot_response = falar_com_atendente_inteligente(from_number, user_session)
