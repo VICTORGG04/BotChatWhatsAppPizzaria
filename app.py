@@ -278,13 +278,8 @@ def webhook():
         if "olá" in user_input_normalized or "oi" in user_input_normalized:
             bot_response = saudacao_string()
         elif user_input_normalized == '1':
-            # --- Explicação para o Cardápio ---
-            bot_response = (
-                "Aqui está o nosso cardápio de pizzas:\n\n"
-                f"{exibir_cardapio_string()}\n\n"
-                "Para fazer um pedido, digite '2' ou 'fazer pedido'. "
-                "Para falar com um atendente, digite '3'."
-            )
+            # --- Explicação para o Cardápio (APENAS O CARDÁPIO) ---
+            bot_response = exibir_cardapio_string() + "\n\n" + saudacao_string() # <--- ALTERADO AQUI
         elif user_input_normalized == '2':
             # --- Explicação para Fazer Pedido ---
             response_message_intro = (
