@@ -1,5 +1,7 @@
 # app.py
 
+# Chatbot de pizzaria com IA (Google Gemini) integrado ao WhatsApp (via Twilio).
+
 from flask import Flask, request, jsonify
 import requests
 import os
@@ -14,13 +16,13 @@ import google.generativeai as genai
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
-    raise ValueError("A chave GEMINI_API_KEY não está configurada no arquivo .env ou nas variáveis de ambiente.")
+    raise ValueError("GEMINI_API_KEY não configurada nas variáveis de ambiente.")
 genai.configure(api_key=GEMINI_API_KEY)
 
 # --- Configuração da Twilio (BSP) ---
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER")
+TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER") # Formato: whatsapp:+1234567890
 
 if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN or not TWILIO_WHATSAPP_NUMBER:
     print("ATENÇÃO: Credenciais da Twilio incompletas. O envio de mensagens via WhatsApp pode não funcionar.")
@@ -179,7 +181,7 @@ user_sessions = {}
 
 # --- FUNÇÃO PARA ENVIAR MENSAGENS DE VOLTA PARA O WHATSAPP (VIA BSP) ---
 def send_whatsapp_message(to_number, message_text):
-    # A D A P T A Ç Ã O   P A R A   T W I L I O
+    # Adaptação para Twilio
     if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_WHATSAPP_NUMBER:
         try:
             client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -219,23 +221,49 @@ def webhook():
             return "Verification token mismatch", 403
 
     # --- Lógica para Mensagens Recebidas (Método POST) ---
-    # ATENÇÃO: A ESTRUTURA DOS DADOS (payload JSON) VARIA MUITO ENTRE BSPs!
-    # Se você estiver usando Twilio, a extração de mensagens é via request.form e as chaves são diferentes!
-    data = request.json
+    # ATENÇÃO: A ESTRUTURA DOS DADOS (payload) DA TWILIO É DIFERENTE DA API DA META!
+    # A Twilio envia os dados como 'application/x-www-form-urlencoded', acessível via request.form.
     
     user_message = ""
     from_number = ""
     
     try:
-        user_message = request.form.get('Body', '').strip() # Conteúdo da mensagem
-        from_number = request.form.get('From', '').replace('whatsapp:', '') # Número do remetente (remove o prefixo 'whatsapp:')
+        # BLOCO DE EXTRAÇÃO CORRETO PARA TWILIO (prioridade)
+        if request.form:
+            user_message = request.form.get('Body', '').strip()
+            from_number = request.form.get('From', '').replace('whatsapp:', '')
+            
+            if not user_message and not from_number:
+                print("Webhook POST recebido sem Body ou From (possivelmente notificação de status da Twilio). Ignorando.")
+                return jsonify({"status": "ignored", "message": "No relevant message data."}), 200
         
-        if not user_message and not from_number:
-            print("Webhook POST recebido sem Body ou From (possivelmente notificação de status da Twilio). Ignorando.")
-            return jsonify({"status": "ignored", "message": "No relevant message data."}), 200
+        # Fallback para outros BSPs (API da Meta JSON)
+        elif request.is_json:
+            data = request.json
+            entry = data.get('entry', [])
+            if not entry: raise ValueError("No 'entry' found in webhook data.")
+            changes = entry[0].get('changes', [])
+            if not changes: raise ValueError("No 'changes' found in webhook data.")
+            value = changes[0].get('value', {})
+            messages = value.get('messages', [])
+            if not messages: raise ValueError("No 'messages' found in webhook data.")
+            
+            message_info = messages[0]
+            from_number = message_info.get('from')
+            message_type = message_info.get('type')
+
+            if message_type == 'text':
+                user_message = message_info.get('text', {}).get('body', '')
+            else:
+                bot_response = "Desculpe, só consigo processar mensagens de texto no momento."
+                send_whatsapp_message(from_number, bot_response) 
+                return jsonify({"status": "success", "message": bot_response}), 200
+        else:
+            print(f"Erro: Content-Type não suportado. Headers recebidos: {request.headers}")
+            return "Unsupported Media Type", 415 
 
     except Exception as e:
-        print(f"Erro ao extrair dados do webhook da Twilio: {e}. Dados recebidos: {request.form}")
+        print(f"Erro ao extrair dados do webhook: {e}. Dados recebidos: {request.data}")
         return jsonify({"status": "error", "message": str(e)}), 200 
 
     print(f"Mensagem recebida de {from_number}: {user_message}")
