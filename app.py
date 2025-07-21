@@ -227,34 +227,11 @@ def webhook():
     from_number = ""
     
     try:
-        # Se você estiver usando Twilio, provavelmente vai querer usar request.form
-        # Exemplo para Twilio (descomente e use este bloco se seu BSP for Twilio):
-        # if request.form:
-        user_message = request.form.get('Body', '').strip()
-        from_number = request.form.get('From', '').replace('whatsapp:', '')
-        # else:
-        #     # Código para a API da Meta (se o BSP replicar esta estrutura)
-        entry = data.get('entry', [])
-        if not entry: raise ValueError("No 'entry' found in webhook data.")
-        changes = entry[0].get('changes', [])
-        if not changes: raise ValueError("No 'changes' found in webhook data.")
-        value = changes[0].get('value', {})
-        messages = value.get('messages', [])
-        if not messages: raise ValueError("No 'messages' found in webhook data.")
-        
-        message_info = messages[0]
-        from_number = message_info.get('from')
-        message_type = message_info.get('type')
-
-        if message_type == 'text':
-            user_message = message_info.get('text', {}).get('body', '')
-        else:
-            bot_response = "Desculpe, só consigo processar mensagens de texto no momento."
-            send_whatsapp_message(from_number, bot_response) 
-            return jsonify({"status": "success", "message": bot_response}), 200
+        user_message = request.form.get('Body', '').strip() # Conteúdo da mensagem
+        from_number = request.form.get('From', '').replace('whatsapp:', '') # Número do remetente
 
     except Exception as e:
-        print(f"Erro ao extrair dados do webhook: {e}. Dados recebidos: {request.data}")
+        print(f"Erro ao extrair dados do webhook da Twilio: {e}. Dados recebidos: {request.form}")
         return jsonify({"status": "error", "message": str(e)}), 200 
 
     print(f"Mensagem recebida de {from_number}: {user_message}")
