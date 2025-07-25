@@ -257,8 +257,6 @@ def exibir_cardapio_string():
     linhas_cardapio.append("----------------------")
     return "\n".join(linhas_cardapio)
 
-# --- FUNÇÃO PRINCIPAL DA LÓGICA DO CHATBOT ---
-
 def processar_pedido_bot(user_message, session_data):
     """Gerencia o fluxo da conversa de pedido (máquina de estados)."""
     session_data.setdefault('current_order', {})
