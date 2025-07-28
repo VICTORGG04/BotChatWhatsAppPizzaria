@@ -14,7 +14,6 @@ import google.generativeai as genai
 # --- CONFIGURAÇÃO INICIAL ---
 load_dotenv()
 
-# Configura a API do Google Gemini
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
@@ -23,7 +22,7 @@ else:
     print("AVISO: GEMINI_API_KEY não configurada. A funcionalidade de resumo da IA não estará disponível.")
     genai_model = None
 
-# --- DADOS PRINCIPAIS ---
+# --- DADOS DO SISTEMA ---
 CARDAPIO = {
     "margherita": {
         "M": {"preco": 35.00, "custo": 12.50, "descricao": "Molho, muçarela e manjericão."},
@@ -67,7 +66,7 @@ CARDAPIO = {
     }
 }
 
-# --- FUNÇÕES DE BANCO DE DADOS E PERSISTÊNCIA ---
+# --- FUNÇÕES DE BANCO DE DADOS ---
 
 def setup_database():
     """Cria o banco de dados SQLite e a tabela 'pedidos' se não existirem."""
@@ -226,8 +225,8 @@ def registrar_pedido_excel(dados_pedido):
         print(f"\n!!! ERRO AO REGISTRAR NO EXCEL LOCAL: {e}")
         print(f"AVISO: Verifique se o arquivo '{arquivo_excel}' não está ABERTO em outro programa.\n")
 
-# --- FUNÇÕES DE TEXTO DO CHATBOT ---
 
+# --- FUNÇÕES DE MENU E SABORES ---
 def saudacao_string():
     return (
         "Olá! Bem-vindo à Pizzaria Delícia!\n"
@@ -331,6 +330,7 @@ def processar_pedido_bot(user_message, session_data):
         except ValueError:
             response_message = "Entrada inválida. Por favor, digite um número."
 
+# --- FUNÇÕES DE TEXTO PAGAMENTO ---
     elif current_state == 'awaiting_payment_method':
         pagamento = user_input
         if pagamento in ['1', 'espécie', 'especie']:
@@ -369,6 +369,7 @@ def processar_pedido_bot(user_message, session_data):
         else:
             response_message = "Não entendi. Por favor, digite 'Sim, para [valor]' ou 'Não'."
 
+# --- FUNÇÕES DE TEXTO ENDEREÇO ---
     elif current_state == 'awaiting_address':
         session_data['address'] = user_message
         try:
@@ -389,10 +390,12 @@ def processar_pedido_bot(user_message, session_data):
                 "lucro": lucro_do_pedido, "pagamento": session_data.get('payment_method', 'N/A'),
                 "endereco": session_data['address'], "observacoes": session_data.get('change_needed', '')
             }
-            
-            registrar_pedido_sqlite(dados_para_registro)
+
+# --- FUNÇÕES DE REGISTRAR DADOS ---
+registrar_pedido_sqlite(dados_para_registro)
             registrar_pedido_google_sheets(dados_para_registro)
             registrar_pedido_excel(dados_para_registro)
+# ---------------------------------#
 
             lucro_total_do_dia = calcular_lucro_total_dia()
             print(f"💰 Lucro total do dia até agora: R$ {lucro_total_do_dia:.2f}")
