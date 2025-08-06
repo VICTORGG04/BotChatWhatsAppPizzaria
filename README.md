@@ -1,0 +1,74 @@
+# BotChatWhatsAppPizzaria
+
+Olá! Seja bem-vindo ao projeto de um bot inteligente para pedidos de pizza via WhatsApp. A ideia aqui é simplificar a vida dos donos de pizzaria e dar uma experiência de pedido incrível para os clientes.
+
+---
+
+## 🍕 O Que o Bot Faz?
+
+**Conversa Inteligente**: Graças à IA do **Google Gemini**, o bot entende o que o cliente quer, sugere o cardápio e responde a perguntas. A conversa flui de forma natural.
+
+**Processa Pedidos**: Ele recebe os pedidos, calcula o valor total e confirma tudo certinho com o cliente.
+
+**Gerencia os Dados**: Os pedidos são salvos em um banco de dados local **SQLite** e podem ser sincronizados com o **Google Sheets**, facilitando o controle.
+
+**Configuração Fácil**: O cardápio pode ser atualizado em um arquivo Excel, e as configurações principais estão em um `config.json`.
+
+---
+
+## 🛠️ Tecnologias por Trás do Projeto
+
+**Python**: A linguagem de programação principal.
+
+**Flask**: Nosso servidor que recebe e envia as mensagens do WhatsApp.
+
+**Google Gemini AI**: O cérebro do bot. Ele gera as respostas e entende as intenções dos clientes.
+
+**SQLite**: Usado para guardar os dados dos pedidos de forma simples e local.
+
+**gspread**: Para conectar o bot às planilhas do Google, se você preferir gerenciar os pedidos por lá.
+
+**openpyxl**: Permite que o bot leia e use os dados do cardápio em arquivos Excel.
+
+**python-dotenv**: Garante que sua chave de API fique segura em um arquivo `.env`.
+
+---
+
+## 🖥️ Como Colocar o Bot para Rodar
+
+### O Que Você Vai Precisar
+
+- **Python 3.10+**
+- Sua **chave de API do Google Gemini**
+- As bibliotecas listadas no `requirements.txt`
+
+### Passo a Passo
+
+1. Baixe o projeto: `git clone https://github.com/VICTORGG04/BotChatWhatsAppPizzaria.git`
+2. Entre na pasta: `cd BotChatWhatsAppPizzaria`
+3. Instale as dependências: `pip install -r requirements.txt`
+4. Configure o `.env`: Crie um arquivo chamado `.env` e coloque sua chave de API nele:
+
+GOOGLE_API_KEY="SUA_CHAVE_AQUI"
+
+
+5. Inicie o bot: `python app.py`
+
+Pronto! O bot vai começar a funcionar. Se ele precisar do QR Code do WhatsApp, ele vai abrir uma janela para você escanear.
+
+---
+
+## 🚀 Quer Ajudar?
+
+Se tiver ideias, sugestões ou encontrar algum erro, sua contribuição é muito bem-vinda!
+
+1. Faça um **fork** do projeto.
+2. Crie sua branch de trabalho.
+3. Mande suas alterações.
+4. Abra um **Pull Request**.
+
+---
+
+## 📄 Licença
+
+Este projeto é distribuído sob a licença [MIT](https://github.com/VICTORGG04/BotChatW
