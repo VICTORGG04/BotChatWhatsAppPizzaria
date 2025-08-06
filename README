@@ -1,0 +1,82 @@
+BotChatWhatsAppPizzaria
+Um bot inteligente para automatizar pedidos de pizza via WhatsApp, usando o framework web Flask e a API Google Gemini AI para conversação dinâmica. O projeto gerencia dados de pedidos com SQLite e interage com planilhas como Google Sheets e Excel.
+
+🌟 Recursos Principais
+Conversação Inteligente com IA: Utiliza a API do Google Gemini AI para um fluxo de conversa natural e dinâmico, respondendo aos clientes de forma contextual.
+
+Estrutura de API em Flask: O framework Flask gerencia as requisições, agindo como a ponte entre o WhatsApp e a lógica do bot.
+
+Gerenciamento de Dados: Utiliza o SQLite para armazenar localmente dados de pedidos e o gspread para sincronizá-los com o Google Sheets, facilitando a visualização e análise.
+
+Configuração Flexível: Os dados do cardápio podem ser definidos em um arquivo Excel (.xlsx) ou planilha do Google, e as chaves de API são gerenciadas com segurança via variáveis de ambiente.
+
+🚀 Tecnologias Utilizadas
+Python: Linguagem de programação principal.
+
+Flask: Framework web para a API que recebe e envia mensagens.
+
+Google Gemini AI: Para a lógica de conversação e geração de texto.
+
+sqlite3: Banco de dados para armazenamento local.
+
+gspread: Para interagir com as APIs do Google Sheets.
+
+openpyxl: Para leitura e manipulação de arquivos Excel.
+
+python-dotenv: Para carregar variáveis de ambiente.
+
+📦 Como Instalar e Rodar o Projeto
+Pré-requisitos
+Python 3.10+
+
+pip (gerenciador de pacotes do Python)
+
+Uma chave de API do Google Gemini AI.
+
+Credenciais para acesso ao Google Sheets (se aplicável).
+
+Instalação
+Clone o repositório:
+
+Bash
+
+git clone https://github.com/VICTORGG04/BotChatWhatsAppPizzaria.git
+cd BotChatWhatsAppPizzaria
+Crie um ambiente virtual e instale as dependências:
+
+Bash
+
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+Configuração
+Crie um arquivo .env na raiz do projeto para sua chave de API do Gemini:
+
+GOOGLE_API_KEY="SUA_CHAVE_AQUI"
+Se você usa o Google Sheets, siga a documentação do gspread para obter as credenciais e configure-as para o projeto.
+
+Edite o arquivo config.json para definir o cardápio e outras configurações.
+
+O banco de dados será inicializado automaticamente na primeira execução com a função setup_database do chatbot.py.
+
+Execução
+Inicie a aplicação principal:
+
+Bash
+
+python app.py
+🤝 Como Contribuir
+Contribuições são o que tornam a comunidade um lugar incrível para aprender e criar. Sinta-se à vontade para nos ajudar a melhorar o projeto!
+
+Faça um fork do repositório.
+
+Crie uma nova branch para sua feature: git checkout -b minha-nova-feature
+
+Faça suas alterações e commit-as: git commit -m 'feat: Adicionando nova funcionalidade'
+
+Envie suas alterações para o repositório: git push origin minha-nova-feature
+
+Abra um Pull Request.
+
+📜 Licença
+Este projeto está sob a licença MIT.
