@@ -25,8 +25,8 @@ USER app
 EXPOSE 5000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
-# Run with gunicorn on $PORT (Railway injects this) or default 5000
-CMD gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 4 --threads 2 --timeout 120 app:app
+# Run startup script (gunicorn + celery worker + beat)
+CMD sh start.sh
