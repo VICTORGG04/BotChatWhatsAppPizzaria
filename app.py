@@ -179,7 +179,7 @@ def admin_testar_sheets():
         pedido = DadosPedido(
             numero_do_dia=999,
             timestamp=datetime.now(),
-            itens=[ItemPedido(sabor="Calabresa", tamanho=TamanhoPizza.G, quantidade=1)],
+            itens=[ItemPedido(sabor="Calabresa", tamanho=TamanhoPizza.G, quantidade=1, preco=45.0)],
             total=45.00, lucro=20.00,
             pagamento=MetodoPagamento.PIX,
             endereco="Teste Automático",
