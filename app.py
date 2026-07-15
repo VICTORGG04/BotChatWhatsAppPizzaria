@@ -1,5 +1,6 @@
 import os
 import logging
+from datetime import datetime
 from flask import Flask, request, jsonify, abort
 
 from config import settings
@@ -166,6 +167,90 @@ def admin_stats():
         "lucro_dia": lucro,
         "moeda": "BRL"
     })
+
+
+@app.route('/admin/exportar-excel', methods=['GET'])
+def admin_exportar_excel():
+    """Exporta pedidos do dia para Excel."""
+    from chatbot.storage.sqlite import buscar_pedidos_hoje
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from io import BytesIO
+    import json
+
+    pedidos = buscar_pedidos_hoje()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Pedidos"
+
+    headers = ["Nº Pedido", "Hora", "Itens", "Total (R$)", "Lucro (R$)", "Pagamento", "Endereço", "Observações", "Status"]
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="3CB371", end_color="3CB371", fill_type="solid")
+    thin_border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+    center_align = Alignment(horizontal='center', vertical='center')
+
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = thin_border
+        cell.alignment = center_align
+
+    light_green = PatternFill(start_color="D9F2E9", end_color="D9F2E9", fill_type="solid")
+    for row_idx, pedido in enumerate(pedidos, 2):
+        itens = pedido.get("itens_pedido", "[]")
+        if isinstance(itens, str):
+            try:
+                itens_lista = json.loads(itens)
+                itens_formatados = ", ".join([
+                    f"{i.get('quantidade', '?')}x {i.get('sabor', '?')}"
+                    for i in itens_lista
+                ])
+            except json.JSONDecodeError:
+                itens_formatados = itens
+        else:
+            itens_formatados = str(itens)
+
+        linha = [
+            pedido.get("numero_do_dia"),
+            pedido.get("timestamp", "")[11:16] if pedido.get("timestamp") else "",
+            itens_formatados,
+            pedido.get("total_pedido", 0),
+            pedido.get("lucro_pedido", 0),
+            pedido.get("metodo_pagamento", ""),
+            pedido.get("endereco", ""),
+            pedido.get("observacoes", ""),
+            pedido.get("status", "recebido"),
+        ]
+
+        for col, valor in enumerate(linha, 1):
+            cell = ws.cell(row=row_idx, column=col, value=valor)
+            cell.fill = light_green
+            cell.border = thin_border
+
+        ws.cell(row=row_idx, column=4).number_format = 'R$ #,##0.00'
+        ws.cell(row=row_idx, column=5).number_format = 'R$ #,##0.00'
+
+    ws.column_dimensions['C'].width = 55
+    ws.column_dimensions['D'].width = 15
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['G'].width = 50
+    ws.column_dimensions['H'].width = 35
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    from flask import send_file
+    return send_file(
+        output,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=f"pedidos_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+    )
 
 
 @app.errorhandler(400)
