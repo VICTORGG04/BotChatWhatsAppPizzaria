@@ -25,7 +25,9 @@ jobs:
           curl -L "https://github.com/railwayapp/cli/releases/download/$VERSION/railway-$VERSION-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/railway.tar.gz
           sudo tar -xzf /tmp/railway.tar.gz -C /usr/local/bin railway
 
-      - name: Deploy
-        run: railway up --detach --service pizzaria-bot
+      - name: Link and Deploy
+        run: |
+          railway link --project celebrated-empathy --service pizzaria-bot
+          railway up --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
