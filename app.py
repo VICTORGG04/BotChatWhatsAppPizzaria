@@ -41,13 +41,26 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def index():
-    return jsonify({
-        "app": "PyPizzas - Bot WhatsApp",
-        "version": "2.0.0",
-        "status": "running",
-        "webhook": "/webhook",
-        "health": "/health"
-    }), 200
+    return '''<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyPizzas - Peça sua pizza pelo WhatsApp!</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; text-align: center; }
+        h1 { color: #e74c3c; }
+        p { color: #555; line-height: 1.6; }
+        .status { color: #27ae60; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🍕 PyPizzas</h1>
+    <p>Faça seu pedido pelo WhatsApp de forma inteligente!</p>
+    <p class="status">✅ Sistema online</p>
+    <p><small>PyPizzas Bot v2.0.0</small></p>
+</body>
+</html>''', 200, {'Content-Type': 'text/html'}
 
 @app.route('/health', methods=['GET'])
 def health_check():
