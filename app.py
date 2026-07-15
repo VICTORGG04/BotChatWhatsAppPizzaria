@@ -1,4 +1,5 @@
 import os
+import base64
 import logging
 from datetime import datetime
 from flask import Flask, request, jsonify, abort
@@ -8,6 +9,21 @@ from models import SessaoCliente, WebhookPayload
 from session_manager import session_manager
 from security import whatsapp_webhook_required, verify_whatsapp_webhook_challenge
 from chatbot import processar_mensagem
+
+
+def _setup_credentials():
+    """Decodifica GOOGLE_CREDENTIALS_B64 para credentials.json se necessario."""
+    creds_b64 = os.environ.get("GOOGLE_CREDENTIALS_B64", "")
+    if creds_b64 and not os.path.exists("credentials.json"):
+        try:
+            content = base64.b64decode(creds_b64).decode("utf-8")
+            with open("credentials.json", "w") as f:
+                f.write(content)
+        except Exception:
+            pass
+
+
+_setup_credentials()
 
 # Configurar logging estruturado
 import structlog
@@ -295,23 +311,7 @@ def internal_error(e):
     return jsonify({"error": "Erro interno", "message": "Erro no processamento"}), 500
 
 
-def _setup_credentials():
-    """Decodifica GOOGLE_CREDENTIALS_B64 para credentials.json se necessário."""
-    import base64
-    creds_b64 = os.environ.get("GOOGLE_CREDENTIALS_B64", "")
-    if creds_b64 and not os.path.exists("credentials.json"):
-        try:
-            content = base64.b64decode(creds_b64).decode("utf-8")
-            with open("credentials.json", "w") as f:
-                f.write(content)
-            logger.info("credentials.json gerado a partir de GOOGLE_CREDENTIALS_B64")
-        except Exception as e:
-            logger.warning("Falha ao gerar credentials.json", error=str(e))
-
-
 if __name__ == '__main__':
-    _setup_credentials()
-    
     from chatbot.storage.sqlite import setup_database
     setup_database()
     
