@@ -271,8 +271,23 @@ def internal_error(e):
     return jsonify({"error": "Erro interno", "message": "Erro no processamento"}), 500
 
 
+def _setup_credentials():
+    """Decodifica GOOGLE_CREDENTIALS_B64 para credentials.json se necessário."""
+    import base64
+    creds_b64 = os.environ.get("GOOGLE_CREDENTIALS_B64", "")
+    if creds_b64 and not os.path.exists("credentials.json"):
+        try:
+            content = base64.b64decode(creds_b64).decode("utf-8")
+            with open("credentials.json", "w") as f:
+                f.write(content)
+            logger.info("credentials.json gerado a partir de GOOGLE_CREDENTIALS_B64")
+        except Exception as e:
+            logger.warning("Falha ao gerar credentials.json", error=str(e))
+
+
 if __name__ == '__main__':
-    # Setup database on startup
+    _setup_credentials()
+    
     from chatbot.storage.sqlite import setup_database
     setup_database()
     
