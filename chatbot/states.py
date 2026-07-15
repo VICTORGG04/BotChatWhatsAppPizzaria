@@ -164,7 +164,15 @@ def _processar_pagamento(msg: str, sessao: SessaoCliente) -> tuple[str, SessaoCl
     if msg in ["3", "pix"]:
         sessao.payment_method = MetodoPagamento.PIX
         sessao.state = EstadoConversa.AWAITING_ADDRESS.value
-        return f"Pagamento via *Pix*. Chave: {settings.pix_key}\n\nApós pagar, informe seu endereço.", sessao
+        qrcode_url = "https://pizzaria-bot-production.up.railway.app/pix/qrcode"
+        return (
+            f"Pagamento via *Pix* 💳\n\n"
+            f"📱 Escaneie o QR Code ou use a chave:\n"
+            f"`{settings.pix_key}`\n\n"
+            f"🔗 Ou acesse: {qrcode_url}\n\n"
+            f"Após pagar, informe seu *endereço* para entrega.",
+            sessao,
+        )
     
     return "Opção inválida. Escolha 1 (Espécie), 2 (Cartão) ou 3 (Pix).", sessao
 

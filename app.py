@@ -173,6 +173,21 @@ def admin_pedidos():
     })
 
 
+@app.route('/pix/qrcode', methods=['GET'])
+def pix_qrcode():
+    """Gera QR Code PIX."""
+    from flask import send_file
+    from chatbot.storage.pix import gerar_pix_qrcode
+    import io
+
+    amount = request.args.get("amount", type=float)
+    desc = request.args.get("desc", "")
+    img_bytes = gerar_pix_qrcode(amount=amount, description=desc or None)
+    if img_bytes is None:
+        return jsonify({"error": "qrcode nao instalado"}), 500
+    return send_file(io.BytesIO(img_bytes), mimetype="image/png")
+
+
 @app.route('/admin/stats', methods=['GET'])
 def admin_stats():
     """Endpoint admin para estatísticas."""
