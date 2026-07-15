@@ -21,17 +21,10 @@ jobs:
 
       - name: Install Railway CLI
         run: |
-          curl -fsSL https://railway.app/install.sh | sh
-          echo "$HOME/.railway/bin" >> $GITHUB_PATH
-
-      - name: Verify CLI
-        run: |
-          export PATH="$HOME/.railway/bin:$PATH"
-          railway --version
+          curl -L https://github.com/railwayapp/cli/releases/latest/download/railway-stable-linux-amd64.deb -o /tmp/railway.deb
+          sudo dpkg -i /tmp/railway.deb
 
       - name: Deploy
-        run: |
-          export PATH="$HOME/.railway/bin:$PATH"
-          railway up --detach --service pizzaria-bot
+        run: railway up --detach --service pizzaria-bot
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
