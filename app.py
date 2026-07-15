@@ -185,30 +185,6 @@ def admin_stats():
     })
 
 
-@app.route('/admin/testar-sheets', methods=['GET'])
-def admin_testar_sheets():
-    """Testa integracao com Google Sheets."""
-    from chatbot.storage.sheets import registrar_pedido_google_sheets
-    from models import DadosPedido, ItemPedido, TamanhoPizza, MetodoPagamento, StatusPedido
-
-    try:
-        pedido = DadosPedido(
-            numero_do_dia=999,
-            timestamp=datetime.now(),
-            itens=[ItemPedido(sabor="Calabresa", tamanho=TamanhoPizza.G, quantidade=1, preco=45.0)],
-            total=45.00, lucro=20.00,
-            pagamento=MetodoPagamento.PIX,
-            endereco="Teste Automático",
-            observacoes="Teste integração Railway",
-            status=StatusPedido.RECEBIDO
-        )
-        resultado = registrar_pedido_google_sheets(pedido)
-        return jsonify({"sheets": resultado, "mensagem": "OK" if resultado else "Falhou"}), 200 if resultado else 500
-    except Exception as e:
-        logger.error("Erro ao testar sheets", error=str(e), exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-
 @app.route('/admin/exportar-excel', methods=['GET'])
 def admin_exportar_excel():
     """Exporta pedidos do dia para Excel."""
