@@ -1,0 +1,12 @@
+.env
+.git
+.gitignore
+.idea
+__pycache__
+*.pyc
+fly.toml
+Dockerfile.fly
+docker-compose.yml
+README.md
+LICENSE
+logs/

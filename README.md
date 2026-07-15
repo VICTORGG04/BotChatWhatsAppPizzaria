@@ -1,74 +1,266 @@
-# BotChatWhatsAppPizzaria
+# BotChatWhatsAppPizzaria v2.0
 
-Olá! Seja bem-vindo ao projeto de um bot inteligente para pedidos de pizza via WhatsApp. A ideia aqui é simplificar a vida dos donos de pizzaria e dar uma experiência de pedido incrível para os clientes.
+Bot inteligente para pedidos de pizza via WhatsApp Business API, com IA (Google Gemini), persistência multi-storage e arquitetura escalável.
 
----
+## 🚀 Funcionalidades
 
-## 🍕 O Que o Bot Faz?
+- **WhatsApp Business API** - Webhook seguro com verificação HMAC-SHA256
+- **IA Conversacional** - Google Gemini para entendimento natural e resumo de conversas
+- **Máquina de Estados** - Fluxo robusto de pedidos (sabor → tamanho → qtd → pagamento → endereço)
+- **Persistência Híbrida** - SQLite (local) + Google Sheets (cloud) + Excel (backup)
+- **Processamento Assíncrono** - Celery + Redis para tarefas de I/O não-bloqueantes
+- **Sessões Distribuídas** - Redis para escalabilidade horizontal
+- **Type Safety** - Pydantic v2 para validação de dados
+- **Observabilidade** - Structlog (JSON) + Health checks
+- **Containerização** - Docker + Docker Compose prontos para produção
 
-**Conversa Inteligente**: Graças à IA do **Google Gemini**, o bot entende o que o cliente quer, sugere o cardápio e responde a perguntas. A conversa flui de forma natural.
+## 🏗️ Arquitetura
 
-**Processa Pedidos**: Ele recebe os pedidos, calcula o valor total e confirma tudo certinho com o cliente.
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│  WhatsApp   │────▶│   Flask      │────▶│  Session    │
+│  Business   │     │   Webhook    │     │  Manager    │
+│  API        │     │  (app.py)    │     │  (Redis)    │
+└─────────────┘     └──────┬───────┘     └─────────────┘
+                           │
+                    ┌──────▼───────┐
+                    │  Chatbot     │
+                    │  Core        │
+                    │ (states.py)  │
+                    └──────┬───────┘
+                           │
+           ┌───────────────┼───────────────┐
+           ▼               ▼               ▼
+    ┌────────────┐  ┌────────────┐  ┌────────────┐
+    │  SQLite    │  │Google Sheets│ │   Excel    │
+    │  (tasks)   │  │  (tasks)    │  │  (tasks)   │
+    └────────────┘  └────────────┘  └────────────┘
+           ▲               ▲               ▲
+           └───────────────┼───────────────┘
+                           ▼
+                    ┌────────────┐
+                    │   Celery   │
+                    │  Workers   │
+                    └────────────┘
+```
 
-**Gerencia os Dados**: Os pedidos são salvos em um banco de dados local **SQLite** e podem ser sincronizados com o **Google Sheets**, facilitando o controle.
+## 📦 Estrutura do Projeto
 
-**Configuração Fácil**: O cardápio pode ser atualizado em um arquivo Excel, e as configurações principais estão em um `config.json`.
+```
+BotChatWhatsAppPizzaria/
+├── app.py                 # Flask app + webhook endpoints
+├── config.py              # Configuração centralizada (Pydantic Settings)
+├── models.py              # Modelos Pydantic (type-safe)
+├── security.py            # Verificação HMAC WhatsApp
+├── session_manager.py     # Gerenciador de sessões Redis
+├── celery_app.py          # Configuração Celery
+├── tasks.py               # Tasks assíncronas (I/O)
+├── requirements.txt       # Dependências pinned
+├── Dockerfile             # Imagem Docker otimizada
+├── docker-compose.yml     # Orquestração local
+├── .env.example           # Template de variáveis de ambiente
+├── .github/workflows/     # CI/CD GitHub Actions
+├── chatbot/               # Módulo principal do bot
+│   ├── __init__.py        # Exports públicos
+│   ├── cardapio.py        # Gerenciamento de cardápio
+│   ├── states.py          # Máquina de estados
+│   ├── service.py         # Orquestração de pedidos
+│   ├── ai.py              # Integração Gemini
+│   └── storage/           # Backends de persistência
+│       ├── __init__.py
+│       ├── sqlite.py
+│       ├── sheets.py
+│       └── excel.py
+├── tests/                 # Testes automatizados
+│   ├── test_models.py
+│   ├── test_security_session.py
+│   └── test_webhook.py
+└── simulacao_pizzaria.py  # Simulador de pedidos (dev)
+```
 
----
+## ⚙️ Configuração
 
-## 🛠️ Tecnologias por Trás do Projeto
+### 1. Clone e configure o ambiente
 
-**Python**: A linguagem de programação principal.
+```bash
+git clone https://github.com/SEU_USUARIO/BotChatWhatsAppPizzaria.git
+cd BotChatWhatsAppPizzaria
 
-**Flask**: Nosso servidor que recebe e envia as mensagens do WhatsApp.
+# Copie o template de variáveis
+cp .env.example .env
 
-**Google Gemini AI**: O cérebro do bot. Ele gera as respostas e entende as intenções dos clientes.
+# Edite com suas credenciais
+nano .env
+```
 
-**SQLite**: Usado para guardar os dados dos pedidos de forma simples e local.
+### 2. Variáveis Obrigatórias
 
-**gspread**: Para conectar o bot às planilhas do Google, se você preferir gerenciar os pedidos por lá.
+| Variável | Descrição | Onde obter |
+|----------|-----------|------------|
+| `WHATSAPP_VERIFY_TOKEN` | Token para verificação do webhook | Meta Developer Console |
+| `WHATSAPP_PHONE_NUMBER_ID` | ID do número de telefone | Meta Developer Console |
+| `WHATSAPP_ACCESS_TOKEN` | Token de acesso (curta duração) | Meta Developer Console |
+| `WHATSAPP_APP_SECRET` | App Secret para HMAC | Meta Developer Console > Configurações > Básico |
+| `GEMINI_API_KEY` | Chave da API Gemini | Google AI Studio |
+| `GOOGLE_CREDENTIALS_PATH` | Caminho para credentials.json | Google Cloud Console (Service Account) |
 
-**openpyxl**: Permite que o bot leia e use os dados do cardápio em arquivos Excel.
+### 3. Google Sheets Setup
 
-**python-dotenv**: Garante que sua chave de API fique segura em um arquivo `.env`.
+1. Crie um Service Account no [Google Cloud Console](https://console.cloud.google.com/)
+2. Ative **Google Sheets API** e **Google Drive API**
+3. Baixe o JSON de credenciais → salve como `credentials.json`
+4. Crie uma planilha chamada "Pedidos da Pizzaria"
+5. Compartilhe com o email do Service Account (editor)
 
----
+## 🐳 Execução com Docker (Recomendado)
 
-## 🖥️ Como Colocar o Bot para Rodar
+```bash
+# Build e start de todos os serviços
+docker-compose up -d --build
 
-### O Que Você Vai Precisar
+# Ver logs
+docker-compose logs -f app
 
-- **Python 3.10+**
-- Sua **chave de API do Google Gemini**
-- As bibliotecas listadas no `requirements.txt`
+# Parar
+docker-compose down
+```
 
-### Passo a Passo
+Serviços incluídos:
+- **app** - Flask webhook (porta 5000)
+- **redis** - Cache/sessões/broker
+- **worker** - Celery worker (tasks assíncronas)
+- **beat** - Celery beat (scheduler)
 
-1. Baixe o projeto: `git clone https://github.com/VICTORGG04/BotChatWhatsAppPizzaria.git`
-2. Entre na pasta: `cd BotChatWhatsAppPizzaria`
-3. Instale as dependências: `pip install -r requirements.txt`
-4. Configure o `.env`: Crie um arquivo chamado `.env` e coloque sua chave de API nele:
+## 💻 Execução Local (Desenvolvimento)
 
-GOOGLE_API_KEY="SUA_CHAVE_AQUI"
+```bash
+# Criar venv
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
 
+# Instalar dependências
+pip install -r requirements.txt
 
-5. Inicie o bot: `python app.py`
+# Iniciar Redis (separado)
+redis-server
 
-Pronto! O bot vai começar a funcionar. Se ele precisar do QR Code do WhatsApp, ele vai abrir uma janela para você escanear.
+# Terminal 1: Celery worker
+celery -A celery_app worker -l INFO -Q sheets,excel,database,default
 
----
+# Terminal 2: Celery beat (opcional)
+celery -A celery_app beat -l INFO
 
-## 🚀 Quer Ajudar?
+# Terminal 3: Flask app
+python app.py
+```
 
-Se tiver ideias, sugestões ou encontrar algum erro, sua contribuição é muito bem-vinda!
+## 🧪 Testes
 
-1. Faça um **fork** do projeto.
-2. Crie sua branch de trabalho.
-3. Mande suas alterações.
-4. Abra um **Pull Request**.
+```bash
+# Todos os testes com coverage
+pytest -v --cov=chatbot --cov=app --cov=models --cov=session_manager --cov=config --cov=security
 
----
+# Testes específicos
+pytest tests/test_models.py -v
+pytest tests/test_security_session.py -v
+pytest tests/test_webhook.py -v
+
+# Linting
+ruff check .
+ruff format --check .
+
+# Type checking
+mypy chatbot/ app.py config.py models.py security.py session_manager.py tasks.py celery_app.py
+```
+
+## 📡 Endpoints
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/health` | Health check (Docker/load balancer) |
+| `GET` | `/webhook` | Verificação do webhook WhatsApp (challenge) |
+| `POST` | `/webhook` | Recebe mensagens do WhatsApp |
+| `GET` | `/admin/pedidos` | Lista pedidos do dia (admin) |
+| `GET` | `/admin/stats` | Estatísticas do dia (admin) |
+
+## 🔒 Segurança
+
+- **HMAC-SHA256** - Verificação de assinatura do WhatsApp em toda request POST
+- **Non-root Docker** - Container roda como usuário `appuser`
+- **Secrets via Env** - Nenhum segredo no código
+- **Rate Limiting** - Implementar no load balancer (nginx/Traefik)
+- **HTTPS Obrigatório** - WhatsApp requer TLS válido
+
+## 📊 Monitoramento
+
+```bash
+# Health check
+curl http://localhost:5000/health
+
+# Métricas Celery (Flower)
+pip install flower
+celery -A celery_app flower --port=5555
+# Acesse http://localhost:5555
+```
+
+## 🚀 Deploy em Produção
+
+### Opção 1: Docker Swarm / Kubernetes
+```bash
+# Build e push para registry
+docker build -t ghcr.io/seu-usuario/pizzaria-bot:latest .
+docker push ghcr.io/seu-usuario/pizzaria-bot:latest
+
+# Deploy com stack deploy.yml
+# docker stack deploy -c docker-compose.yml pizzaria
+```
+
+### Opção 2: VPS com Systemd
+```bash
+# Copie arquivos para /opt/pizzaria-bot
+# Configure .env de produção
+# Crie service systemd para app, worker, beat
+sudo systemctl enable pizzaria-bot-app pizzaria-bot-worker pizzaria-bot-beat
+sudo systemctl start pizzaria-bot-app pizzaria-bot-worker pizzaria-bot-beat
+```
+
+### Variáveis de Produção
+```bash
+APP_ENV=production
+DEBUG=false
+LOG_LEVEL=WARNING
+SESSION_TTL_SECONDS=3600
+# Use Redis gerenciado (AWS ElastiCache, Azure Redis, etc.)
+REDIS_HOST=seu-redis.xxxxxx.use1.cache.amazonaws.com
+REDIS_PASSWORD=senha_forte
+```
+
+## 🤝 Contribuindo
+
+1. Fork o projeto
+2. Crie branch: `git checkout -b feature/nova-funcionalidade`
+3. Commit: `git commit -m 'feat: adiciona nova funcionalidade'`
+4. Push: `git push origin feature/nova-funcionalidade`
+5. Abra Pull Request
+
+### Padrões de Commit
+- `feat:` Nova funcionalidade
+- `fix:` Correção de bug
+- `refactor:` Refatoração
+- `docs:` Documentação
+- `test:` Testes
+- `chore:` Manutenção
 
 ## 📄 Licença
 
-Este projeto é distribuído sob a licença [MIT](https://github.com/VICTORGG04/BotChatW
+MIT License - veja [LICENSE](LICENSE)
+
+## 🆘 Suporte
+
+- **Issues**: [GitHub Issues](https://github.com/SEU_USUARIO/BotChatWhatsAppPizzaria/issues)
+- **Discussões**: [GitHub Discussions](https://github.com/SEU_USUARIO/BotChatWhatsAppPizzaria/discussions)
+
+---
+
+**Desenvolvido com ❤️ para automação de pizzarias**
