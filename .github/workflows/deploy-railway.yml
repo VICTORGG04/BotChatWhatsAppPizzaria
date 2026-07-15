@@ -22,9 +22,8 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Link and Deploy
+      - name: Deploy
         run: |
-          railway link --project celebrated-empathy --service pizzaria-bot
-          railway up --detach
+          railway up --detach --service pizzaria-bot --project celebrated-empathy
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
