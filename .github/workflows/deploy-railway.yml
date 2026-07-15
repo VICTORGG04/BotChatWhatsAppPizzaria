@@ -21,8 +21,9 @@ jobs:
 
       - name: Install Railway CLI
         run: |
-          curl -L https://github.com/railwayapp/cli/releases/latest/download/railway-stable-linux-amd64.deb -o /tmp/railway.deb
-          sudo dpkg -i /tmp/railway.deb
+          VERSION=$(curl -s https://api.github.com/repos/railwayapp/cli/releases/latest | grep tag_name | cut -d'"' -f4)
+          curl -L "https://github.com/railwayapp/cli/releases/download/$VERSION/railway-$VERSION-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/railway.tar.gz
+          sudo tar -xzf /tmp/railway.tar.gz -C /usr/local/bin railway
 
       - name: Deploy
         run: railway up --detach --service pizzaria-bot
