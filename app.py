@@ -39,6 +39,16 @@ logger = structlog.get_logger(__name__)
 
 app = Flask(__name__)
 
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({
+        "app": "PyPizzas - Bot WhatsApp",
+        "version": "2.0.0",
+        "status": "running",
+        "webhook": "/webhook",
+        "health": "/health"
+    }), 200
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint para Docker/load balancer."""
