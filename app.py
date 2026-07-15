@@ -182,13 +182,18 @@ def admin_pedidos():
 
 @app.route('/pix/qrcode', methods=['GET'])
 def pix_qrcode():
-    """Gera QR Code PIX."""
+    """Gera QR Code PIX ou retorna BR Code em texto."""
     from flask import send_file
-    from chatbot.storage.pix import gerar_pix_qrcode
+    from chatbot.storage.pix import gerar_pix_qrcode, gerar_pix_payload
     import io
 
     amount = request.args.get("amount", type=float)
     desc = request.args.get("desc", "")
+
+    if request.args.get("format") == "brcode":
+        brcode = gerar_pix_payload(amount=amount, description=desc or None)
+        return brcode, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+
     img_bytes = gerar_pix_qrcode(amount=amount, description=desc or None)
     if img_bytes is None:
         return jsonify({"error": "qrcode nao instalado"}), 500
