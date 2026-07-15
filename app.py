@@ -161,6 +161,13 @@ def webhook():
         abort(500, description="Erro interno do servidor")
 
 
+@app.route('/admin', methods=['GET'])
+def admin_dashboard():
+    """Painel administrativo web."""
+    from chatbot.admin_html import ADMIN_HTML
+    return ADMIN_HTML, 200, {'Content-Type': 'text/html; charset=utf-8'}
+
+
 @app.route('/admin/pedidos', methods=['GET'])
 def admin_pedidos():
     """Endpoint admin para listar pedidos do dia (protegido por IP/API key em produção)."""
