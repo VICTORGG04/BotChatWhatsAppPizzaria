@@ -302,7 +302,7 @@ export default function AuthModal({ open, onClose, onToast }) {
               ...primaryBtnStyle,
               opacity: loading ? 0.6 : 1,
               cursor: loading ? 'not-allowed' : 'pointer',
-              padding: '16px 0', fontSize: 16,
+              width: '100%', padding: '16px 24px', fontSize: 16,
             }}>
             {loading ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
