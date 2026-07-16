@@ -153,3 +153,30 @@ class ResumoConversa(BaseModel):
     valor_total: float
     observacoes: str
     dificuldades: List[str] = Field(default_factory=list)
+
+
+# --- User / Auth Models ---
+
+class User(BaseModel):
+    id: int = 0
+    email: str
+    senha_hash: str = ""
+    nome: str = ""
+    telefone: str = ""
+    created_at: str = ""
+
+
+class EnderecoUsuario(BaseModel):
+    id: int = 0
+    user_id: int
+    endereco: str
+    created_at: str = ""
+
+
+class FavoritoUsuario(BaseModel):
+    id: int = 0
+    user_id: int
+    tipo: str  # sabor, bebida, combo
+    item_key: str
+    nome: str = ""
+    created_at: str = ""

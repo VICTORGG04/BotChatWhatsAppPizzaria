@@ -1,7 +1,8 @@
 import os
 import base64
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+import jwt as pyjwt
 from flask import Flask, request, jsonify, abort
 
 from config import settings
@@ -140,6 +141,180 @@ def loja_status():
         "horario": f"{settings.loja_abertura} às {settings.loja_fechamento}"
     })
 
+# ─── Auth / User API ────────────────────────────────────────
+
+_JWT_SECRET = os.environ.get("JWT_SECRET", "pizzaria-secret-change-in-production")
+_JWT_ALGO = "HS256"
+
+
+def _gerar_token(user_id: int) -> str:
+    return pyjwt.encode({"sub": user_id, "exp": datetime.utcnow() + timedelta(days=30)}, _JWT_SECRET, algorithm=_JWT_ALGO)
+
+
+def _token_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.headers.get("Authorization", "")
+        if not auth.startswith("Bearer "):
+            return jsonify({"erro": "Token nao informado"}), 401
+        try:
+            payload = pyjwt.decode(auth[7:], _JWT_SECRET, algorithms=[_JWT_ALGO])
+            request.user_id = payload["sub"]
+        except pyjwt.ExpiredSignatureError:
+            return jsonify({"erro": "Token expirado"}), 401
+        except Exception:
+            return jsonify({"erro": "Token invalido"}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route('/api/cardapio', methods=['GET'])
+def api_cardapio():
+    import importlib.util
+    import os as _os
+    _base = _os.path.dirname(_os.path.abspath(__file__))
+    spec = importlib.util.spec_from_file_location("cardapio_mod", _os.path.join(_base, "chatbot", "cardapio.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    cardapio = mod.cardapio
+    data = {
+        "sabores": {},
+        "bebidas": cardapio.bebidas,
+        "adicionais": cardapio.adicionais,
+    }
+    for nome, sabor in cardapio.sabores.items():
+        tamanhos = {}
+        for tam, info in sabor.tamanhos.items():
+            tamanhos[tam.value] = {"preco": info.preco, "custo": info.custo, "descricao": info.descricao}
+        data["sabores"][nome] = {
+            "nome": nome,
+            "nome_formatado": sabor.nome_formatado,
+            "categoria": sabor.categoria,
+            "nome_exibicao": sabor.nome_exibicao,
+            "tamanhos": tamanhos,
+        }
+    return jsonify(data)
+
+
+@app.route('/api/auth/register', methods=['POST'])
+def api_auth_register():
+    from chatbot.storage.user_db import criar_usuario
+    data = request.get_json()
+    if not data:
+        return jsonify({"erro": "Dados obrigatorios"}), 400
+    email = (data.get("email") or "").strip()
+    senha = (data.get("senha") or "").strip()
+    nome = (data.get("nome") or "").strip()
+    if not email or not senha:
+        return jsonify({"erro": "Email e senha obrigatorios"}), 400
+    if len(senha) < 6:
+        return jsonify({"erro": "Senha deve ter no minimo 6 caracteres"}), 400
+    try:
+        user = criar_usuario(email, senha, nome)
+        token = _gerar_token(user.id)
+        return jsonify({"token": token, "user": user.model_dump()}), 201
+    except ValueError as e:
+        return jsonify({"erro": str(e)}), 409
+
+
+@app.route('/api/auth/login', methods=['POST'])
+def api_auth_login():
+    from chatbot.storage.user_db import autenticar_usuario
+    data = request.get_json()
+    if not data:
+        return jsonify({"erro": "Dados obrigatorios"}), 400
+    email = (data.get("email") or "").strip()
+    senha = (data.get("senha") or "").strip()
+    if not email or not senha:
+        return jsonify({"erro": "Email e senha obrigatorios"}), 400
+    try:
+        user = autenticar_usuario(email, senha)
+        token = _gerar_token(user.id)
+        return jsonify({"token": token, "user": user.model_dump()})
+    except ValueError as e:
+        return jsonify({"erro": str(e)}), 401
+
+
+@app.route('/api/auth/me', methods=['GET'])
+@_token_required
+def api_auth_me():
+    from chatbot.storage.user_db import buscar_usuario_por_id
+    try:
+        user = buscar_usuario_por_id(request.user_id)
+        return jsonify({"user": user.model_dump()})
+    except ValueError as e:
+        return jsonify({"erro": str(e)}), 404
+
+
+@app.route('/api/auth/me', methods=['PUT'])
+@_token_required
+def api_auth_update():
+    from chatbot.storage.user_db import atualizar_usuario
+    data = request.get_json() or {}
+    nome = data.get("nome")
+    telefone = data.get("telefone")
+    try:
+        user = atualizar_usuario(request.user_id, nome=nome, telefone=telefone)
+        return jsonify({"user": user.model_dump()})
+    except ValueError as e:
+        return jsonify({"erro": str(e)}), 404
+
+
+@app.route('/api/auth/enderecos', methods=['GET'])
+@_token_required
+def api_listar_enderecos():
+    from chatbot.storage.user_db import listar_enderecos
+    enderecos = listar_enderecos(request.user_id)
+    return jsonify({"enderecos": [e.model_dump() for e in enderecos]})
+
+
+@app.route('/api/auth/enderecos', methods=['POST'])
+@_token_required
+def api_adicionar_endereco():
+    from chatbot.storage.user_db import adicionar_endereco
+    data = request.get_json()
+    if not data or not data.get("endereco"):
+        return jsonify({"erro": "Endereco obrigatorio"}), 400
+    endereco = adicionar_endereco(request.user_id, data["endereco"].strip())
+    return jsonify({"endereco": endereco.model_dump()}), 201
+
+
+@app.route('/api/auth/enderecos/<int:id>', methods=['DELETE'])
+@_token_required
+def api_remover_endereco(id):
+    from chatbot.storage.user_db import remover_endereco
+    remover_endereco(request.user_id, id)
+    return jsonify({"ok": True})
+
+
+@app.route('/api/auth/favoritos', methods=['GET'])
+@_token_required
+def api_listar_favoritos():
+    from chatbot.storage.user_db import listar_favoritos
+    favoritos = listar_favoritos(request.user_id)
+    return jsonify({"favoritos": [f.model_dump() for f in favoritos]})
+
+
+@app.route('/api/auth/favoritos', methods=['POST'])
+@_token_required
+def api_adicionar_favorito():
+    from chatbot.storage.user_db import adicionar_favorito
+    data = request.get_json()
+    if not data or not data.get("tipo") or not data.get("item_key"):
+        return jsonify({"erro": "tipo e item_key obrigatorios"}), 400
+    favorito = adicionar_favorito(request.user_id, data["tipo"], data["item_key"], data.get("nome", ""))
+    return jsonify({"favorito": favorito.model_dump()}), 201
+
+
+@app.route('/api/auth/favoritos/<int:id>', methods=['DELETE'])
+@_token_required
+def api_remover_favorito(id):
+    from chatbot.storage.user_db import remover_favorito
+    remover_favorito(request.user_id, id)
+    return jsonify({"ok": True})
+
+
 # ─── WhatsApp Webhook ───────────────────────────────────────
 
 @app.route('/webhook', methods=['GET'])
@@ -187,14 +362,23 @@ def webhook():
 # ─── Cardapio Web ───────────────────────────────────────────
 
 @app.route('/cardapio', methods=['GET'])
-def cardapio_page():
+@app.route('/cardapio/', methods=['GET'])
+@app.route('/cardapio/<path:subpath>', methods=['GET'])
+def cardapio_page(subpath=None):
+    from flask import send_from_directory
+    static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend", "dist")
+    if os.path.exists(os.path.join(static_dir, "index.html")):
+        if subpath and os.path.exists(os.path.join(static_dir, subpath)):
+            return send_from_directory(static_dir, subpath)
+        return send_from_directory(static_dir, "index.html")
+    # Fallback to server-generated HTML
     import importlib.util
-    from cardapio_html import gerar_cardapio_html
     import os as _os
     _base = _os.path.dirname(_os.path.abspath(__file__))
     spec = importlib.util.spec_from_file_location("cardapio_mod", _os.path.join(_base, "chatbot", "cardapio.py"))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
+    from cardapio_html import gerar_cardapio_html
     return gerar_cardapio_html(settings.empresa_numero, mod.cardapio), 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 

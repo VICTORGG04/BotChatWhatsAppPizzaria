@@ -56,6 +56,8 @@ logs/
 data/
 *.xlsx
 *.json
+!frontend/package.json
+!frontend/package-lock.json
 
 # Credentials
 credentials.json

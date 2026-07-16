@@ -12,6 +12,9 @@ google-auth==2.29.0
 google-auth-oauthlib==1.2.0
 openpyxl==3.1.2
 
+# Auth
+PyJWT==2.9.0
+
 # Redis & Celery
 redis==5.0.1
 celery==5.3.6
