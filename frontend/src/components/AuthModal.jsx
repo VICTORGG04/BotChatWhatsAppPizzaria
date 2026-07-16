@@ -70,21 +70,22 @@ export default function AuthModal({ open, onClose, onToast }) {
     let popupOpened = false;
 
     try {
-      window.FB.login(async (response) => {
+      window.FB.login((response) => {
         popupOpened = true;
         if (response.authResponse) {
-          try {
-            const data = await api.auth.facebookLogin(response.authResponse.accessToken);
-            if (!data.token) throw new Error('Token não recebido do servidor');
-            localStorage.setItem('token', data.token);
-            window.location.reload();
-          } catch (err) {
-            if (err.message.includes('nao configurado')) {
-              onToast('Facebook Login não configurado no servidor (falta FACEBOOK_APP_SECRET?)', 'error');
-            } else {
-              onToast('Erro ao autenticar com Facebook: ' + err.message, 'error');
-            }
-          }
+          api.auth.facebookLogin(response.authResponse.accessToken)
+            .then(data => {
+              if (!data.token) throw new Error('Token não recebido do servidor');
+              localStorage.setItem('token', data.token);
+              window.location.reload();
+            })
+            .catch(err => {
+              if (err.message.includes('nao configurado')) {
+                onToast('Facebook Login não configurado no servidor (falta FACEBOOK_APP_SECRET?)', 'error');
+              } else {
+                onToast('Erro ao autenticar com Facebook: ' + err.message, 'error');
+              }
+            });
         } else {
           const reason = response.status ? ` (status: ${response.status})` : '';
           onToast('Login do Facebook cancelado' + reason, 'error');
