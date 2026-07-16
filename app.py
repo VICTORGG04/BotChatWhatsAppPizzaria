@@ -318,16 +318,34 @@ def api_remover_favorito(id):
 @app.route('/api/auth/google', methods=['POST'])
 def api_auth_google():
     from chatbot.storage.user_db import buscar_usuario_por_google_id, criar_usuario_social, vincular_google_id, buscar_usuario_por_email
+    import requests as http_requests
     data = request.get_json()
-    if not data or not data.get("credential"):
+    if not data:
+        return jsonify({"erro": "Token do Google obrigatorio"}), 400
+    credential = data.get("credential")
+    access_token = data.get("access_token")
+    if not credential and not access_token:
         return jsonify({"erro": "Token do Google obrigatorio"}), 400
     try:
-        from google.oauth2 import id_token as google_id_token
-        from google.auth.transport import requests as google_requests
         google_client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
         if not google_client_id:
             return jsonify({"erro": "Google Login nao configurado"}), 501
-        info = google_id_token.verify_oauth2_token(data["credential"], google_requests.Request(), google_client_id)
+
+        if credential:
+            from google.oauth2 import id_token as google_id_token
+            from google.auth.transport import requests as google_requests
+            info = google_id_token.verify_oauth2_token(credential, google_requests.Request(), google_client_id)
+        else:
+            verify = http_requests.get(
+                "https://www.googleapis.com/oauth2/v3/tokeninfo",
+                params={"access_token": access_token}
+            )
+            if not verify.ok:
+                return jsonify({"erro": "Token Google invalido"}), 401
+            info = verify.json()
+            if info.get("aud") != google_client_id:
+                return jsonify({"erro": "Token Google nao pertence a este app"}), 401
+
         if not info.get("email"):
             return jsonify({"erro": "Email nao fornecido pelo Google"}), 400
         google_id = info["sub"]

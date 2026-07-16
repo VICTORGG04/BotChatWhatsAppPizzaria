@@ -145,11 +145,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .social-btn-google{background:#1a1a2e;color:#eee;border:1px solid #3a3a6e}
 .social-btn-google:hover{background:#2a2a4e;border-color:#e74c3c}
 
-/* Google button wrapper — força o botão Google a ocupar 100% como o Facebook */
-.google-btn-wrapper{width:100%;height:44px;border-radius:12px;overflow:hidden}
-.google-btn-wrapper>div{width:100%!important;height:44px!important;border-radius:12px!important}
-.google-btn-wrapper>div>iframe{width:100%!important;height:44px!important;border-radius:12px!important}
-
 /* Favorite star */
 .fav-star{cursor:pointer;font-size:16px;padding:2px;background:none;border:none;transition:transform .15s}
 .fav-star:hover{transform:scale(1.2)}

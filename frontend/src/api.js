@@ -19,6 +19,7 @@ export const api = {
     me: () => request('/auth/me'),
     update: (data) => request('/auth/me', { method: 'PUT', body: JSON.stringify(data) }),
     googleLogin: (credential) => request('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) }),
+    googleAccessToken: (accessToken) => request('/auth/google', { method: 'POST', body: JSON.stringify({ access_token: accessToken }) }),
     facebookLogin: (accessToken) => request('/auth/facebook', { method: 'POST', body: JSON.stringify({ access_token: accessToken }) }),
   },
   enderecos: {
