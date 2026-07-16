@@ -7,7 +7,7 @@ from pathlib import Path
 def setup_google_sheets():
     """Guia interativo para configurar Google Sheets."""
     print("=" * 60)
-    print("  Configuração do Google Sheets para PyPizzas")
+    print("  Configuração do Google Sheets para PayPizzas")
     print("=" * 60)
     print()
     print("Passo 1: Acesse https://console.cloud.google.com/")

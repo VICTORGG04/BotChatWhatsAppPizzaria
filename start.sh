@@ -1,7 +1,7 @@
 #!/bin/sh
 # Start.sh - Inicia gunicorn + celery worker+beat no mesmo container
 
-echo "=== Iniciando PyPizzas Bot ==="
+echo "=== Iniciando PayPizzas Bot ==="
 
 # Gera credentials.json se necessário
 if [ -n "$GOOGLE_CREDENTIALS_B64" ] && [ ! -f credentials.json ]; then
@@ -9,7 +9,7 @@ if [ -n "$GOOGLE_CREDENTIALS_B64" ] && [ ! -f credentials.json ]; then
 fi
 
 # Inicializa banco SQLite
-python -c "from chatbot.storage.sqlite import setup_database; setup_database()" 2>/dev/null
+python -c "from chatbot.storage.sqlite import setup_database; setup_database()"
 
 # Inicia celery worker + beat (embutido) em background
 echo "Iniciando celery worker + beat..."

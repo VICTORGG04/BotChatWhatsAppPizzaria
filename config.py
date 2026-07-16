@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     celery_broker_url: str = Field(default="redis://localhost:6379/0", alias="CELERY_BROKER_URL")
     celery_result_backend: str = Field(default="redis://localhost:6379/0", alias="CELERY_RESULT_BACKEND")
     
+    # WhatsApp Business number (for customer wa.me links)
+    empresa_numero: str = Field(default="5511999999999", alias="EMPRESA_NUMERO")
+    
     # PIX
     pix_key: str = Field(default="111.222.333-44 (CPF)", alias="PIX_KEY")
     
@@ -50,6 +53,11 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     log_format: str = Field(default="json", alias="LOG_FORMAT")
+    
+    # Store hours (HH:MM format)
+    loja_abertura: str = Field(default="18:00", alias="LOJA_ABERTURA")
+    loja_fechamento: str = Field(default="00:00", alias="LOJA_FECHAMENTO")
+    loja_dias: str = Field(default="0,1,2,3,4,5,6", alias="LOJA_DIAS")
     
     class Config:
         env_file = ".env"
@@ -67,6 +75,9 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env.lower() == "production"
+    
+    def is_loja_aberta(self) -> bool:
+        return True
 
 
 settings = Settings()

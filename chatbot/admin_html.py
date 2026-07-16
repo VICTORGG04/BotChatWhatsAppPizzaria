@@ -1,235 +1,203 @@
 ADMIN_HTML = """<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PyPizzas - Painel Admin</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
-        .header { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 20px; text-align: center; }
-        .header h1 { font-size: 24px; margin-bottom: 4px; }
-        .header p { opacity: 0.9; font-size: 14px; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .stat-card h3 { font-size: 13px; text-transform: uppercase; color: #888; margin-bottom: 8px; }
-        .stat-card .value { font-size: 28px; font-weight: bold; }
-        .stat-card .value.green { color: #27ae60; }
-        .stat-card .value.blue { color: #2980b9; }
-        .stat-card .value.orange { color: #e67e22; }
-        .actions { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
-        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-primary { background: #3498db; color: white; }
-        .btn-success { background: #27ae60; color: white; }
-        .btn-warning { background: #e67e22; color: white; }
-        .btn-danger { background: #e74c3c; color: white; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PayPizzas - Admin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#eef0f2;color:#333;font-size:15px}
 
-        .pix-section { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 24px; display: none; }
-        .pix-section.open { display: block; }
-        .pix-grid { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
-        .pix-qr { text-align: center; }
-        .pix-qr img { width: 200px; height: 200px; border: 2px solid #eee; border-radius: 12px; }
-        .pix-info { flex: 1; min-width: 250px; }
-        .pix-info h3 { color: #e74c3c; margin-bottom: 8px; }
-        .pix-key { background: #f8f8f8; padding: 10px 14px; border-radius: 8px; font-family: monospace; font-size: 14px; word-break: break-all; margin: 8px 0; border: 1px solid #eee; }
-        .pix-amount { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
-        .pix-amount input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; width: 150px; }
-        .btn-copy { background: #f0f0f0; border: 1px solid #ddd; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-        .btn-copy:hover { background: #e0e0e0; }
-        .copied-msg { color: #27ae60; font-size: 13px; display: none; margin-left: 8px; }
-        .toggle-pix { background: none; border: 1px dashed #ccc; color: #888; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-        .toggle-pix:hover { border-color: #e67e22; color: #e67e22; }
+@keyframes grad{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes slide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes count{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+@keyframes shimmer{0%{background-position:-200px 0}100%{background-position:calc(200px + 100%) 0}}
+@keyframes toastIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(-20px)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
 
-        .orders { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
-        .orders h2 { padding: 16px 20px; background: #fafafa; border-bottom: 1px solid #eee; font-size: 16px; display: flex; align-items: center; justify-content: space-between; }
-        .order-item { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-        .order-item:last-child { border-bottom: none; }
-        .order-item:hover { background: #fafafa; }
-        .order-num { font-weight: bold; font-size: 18px; min-width: 40px; }
-        .order-info { flex: 1; }
-        .order-info .items { font-size: 14px; color: #555; margin-bottom: 4px; }
-        .order-info .meta { font-size: 12px; color: #999; }
-        .order-status { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        .status-recebido { background: #ffeaa7; color: #856404; }
-        .status-preparando { background: #81ecec; color: #006064; }
-        .status-saiu { background: #74b9ff; color: #003366; }
-        .status-entregue { background: #55efc4; color: #00695c; }
-        .status-cancelado { background: #ff7675; color: #7f0000; }
-        .pix-badge { background: #e67e22; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; }
-        .order-price { font-weight: bold; color: #27ae60; font-size: 16px; min-width: 80px; text-align: right; }
-        .order-actions { display: flex; gap: 6px; align-items: center; }
-        .order-pix-btn { background: none; border: 1px solid #e67e22; color: #e67e22; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-        .order-pix-btn:hover { background: #e67e22; color: white; }
-        .empty { text-align: center; padding: 60px 20px; color: #999; }
-        .empty p { font-size: 18px; margin-bottom: 8px; }
-        .badge { background: #e74c3c; color: white; border-radius: 50%; padding: 2px 8px; font-size: 12px; margin-left: 6px; }
-        @media (max-width: 600px) {
-            .order-item { flex-direction: column; align-items: flex-start; }
-            .order-price { text-align: left; }
-            .pix-grid { flex-direction: column; }
-        }
-    </style>
+.header{background:linear-gradient(135deg,#e74c3c,#c0392b,#e67e22,#c0392b);background-size:300% 300%;animation:grad 6s ease infinite;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.header h1{font-size:22px;text-shadow:0 1px 4px rgba(0,0,0,.2)}
+.header span{font-size:13px;opacity:.9}
+.container{max-width:1400px;margin:0 auto;padding:16px}
+.row{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:18px 22px;flex:1;min-width:0;transition:all .25s ease;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.1)}
+.card::after{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:12px 0 0 12px}
+.card:nth-child(1)::after{background:#2980b9}
+.card:nth-child(2)::after{background:#27ae60}
+.card:nth-child(3)::after{background:#8e44ad}
+.card:nth-child(4)::after{background:#f39c12}
+.card h3{font-size:11px;text-transform:uppercase;color:#888;margin-bottom:6px;letter-spacing:.5px}
+.val{font-size:26px;font-weight:700;animation:count .4s ease-out}
+.val.green{color:#27ae60}
+.val.blue{color:#2980b9}
+.val.purple{color:#8e44ad}
+
+.actions{display:flex;gap:10px}
+.btn{padding:9px 20px;border:none;border-radius:8px;font-size:14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .2s;font-weight:500}
+.btn-success{background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;box-shadow:0 2px 8px rgba(39,174,96,.3)}
+.btn-primary{background:linear-gradient(135deg,#3498db,#5dade2);color:#fff;box-shadow:0 2px 8px rgba(52,152,219,.3)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.btn:active{transform:translateY(0)}
+
+.cols{display:grid;grid-template-columns:1fr 1.5fr 1.5fr;gap:12px;margin-bottom:14px}
+.cols>div{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:18px 22px;transition:all .25s ease}
+.cols>div:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.1)}
+.cols h3{font-size:11px;text-transform:uppercase;color:#888;margin-bottom:10px;letter-spacing:.5px}
+.item{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;animation:slide .3s ease-out}
+.item .l{color:#666}
+.item .r{font-weight:600}
+.bar-bg{background:#f0f0f0;border-radius:4px;height:8px;margin:4px 0 6px;overflow:hidden}
+.bar{height:100%;border-radius:4px;transition:width .8s cubic-bezier(.22,1,.36,1)}
+
+.orders{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden}
+.orders .hdr{padding:12px 20px;font-size:14px;font-weight:600;background:#fafafa;border-bottom:1px solid #eee;display:flex;justify-content:space-between}
+
+.o{padding:10px 20px;border-bottom:1px solid #f3f3f3;display:flex;align-items:center;gap:12px;font-size:14px;flex-wrap:wrap;animation:slide .3s ease-out;transition:all .2s;border-left:3px solid transparent}
+.o:last-child{border-bottom:none}
+.o:hover{background:#f8f9fa;border-left-color:#e74c3c}
+.od{font-weight:700;color:#e74c3c;min-width:36px;font-size:16px}
+.oi{flex:1;min-width:140px}
+.oi .t{color:#333}
+.oi .m{font-size:13px;color:#888}
+.st{padding:4px 12px;border-radius:14px;font-size:12px;font-weight:600;white-space:nowrap;transition:all .3s}
+.st-r{background:#ffeaa7;color:#856404;animation:pulse 2s ease-in-out 3}
+.st-p{background:#81ecec;color:#006064}
+.st-s{background:#74b9ff;color:#003366}
+.st-e{background:#55efc4;color:#00695c}
+.st-c{background:#ff7675;color:#7f0000;text-decoration:line-through}
+.op{font-weight:700;color:#27ae60;font-size:15px;white-space:nowrap;min-width:80px;text-align:right}
+.empty{text-align:center;padding:50px;color:#999;font-size:15px}
+.bdg{background:#e74c3c;color:#fff;border-radius:12px;padding:0 10px;font-size:12px;margin-left:8px}
+.pb{background:linear-gradient(135deg,#e67e22,#f39c12);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:4px}
+
+.cb{background:none;border:1.5px solid #e74c3c;color:#e74c3c;border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;white-space:nowrap;transition:all .2s;font-weight:500}
+.cb:hover{background:#e74c3c;color:#fff;animation:shake .4s ease;box-shadow:0 2px 8px rgba(231,76,60,.3)}
+.cb:disabled{opacity:.4;cursor:not-allowed;animation:none}
+
+.toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:10px;color:#fff;font-size:14px;z-index:999;animation:toastIn .3s ease-out;box-shadow:0 4px 20px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;max-width:360px}
+.toast.out{animation:toastOut .3s ease-in forwards}
+.toast.success{background:linear-gradient(135deg,#27ae60,#2ecc71)}
+.toast.error{background:linear-gradient(135deg,#e74c3c,#e67e22)}
+
+.loading{position:relative;overflow:hidden}
+.loading::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);background-size:200px 100%;animation:shimmer 1.5s infinite}
+
+@media(max-width:700px){.cols{grid-template-columns:1fr}.o{flex-wrap:wrap}.op{text-align:left}}
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>PyPizzas</h1>
-        <p>Painel de Gerenciamento de Pedidos</p>
-    </div>
-    <div class="container">
-        <div class="stats" id="stats">
-            <div class="stat-card"><h3>Pedidos Hoje</h3><div class="value blue" id="total-orders">0</div></div>
-            <div class="stat-card"><h3>Faturamento</h3><div class="value green" id="total-revenue">R$ 0,00</div></div>
-            <div class="stat-card"><h3>Lucro</h3><div class="value orange" id="total-profit">R$ 0,00</div></div>
-            <div class="stat-card"><h3>Status</h3><div class="value" id="status-online">Offline</div></div>
-        </div>
+<div class="header">
+<h1>PayPizzas</h1>
+<span><span id="s-online">Offline</span> &middot; <a href="/cardapio" style="color:#fff">Cardapio</a></span>
+</div>
+<div class="container">
+<div class="row" id="stats">
+<div class="card loading"><h3>Pedidos</h3><div class="val blue" id="t-orders">0</div></div>
+<div class="card loading"><h3>Faturamento</h3><div class="val green" id="t-revenue">R$0</div></div>
+<div class="card loading"><h3>Ticket</h3><div class="val purple" id="t-avg">R$0</div></div>
+<div class="card loading"><h3>Lucro</h3><div class="val green" id="t-profit">R$0</div></div>
+<div class="actions" style="flex:none;align-items:center">
+<a href="/admin/exportar-excel" class="btn btn-success">Excel</a>
+<button class="btn btn-primary" onclick="location.reload()">Atualizar</button>
+</div>
+</div>
 
-        <div class="actions">
-            <a href="/admin/exportar-excel" class="btn btn-success"> Exportar Excel</a>
-            <button class="btn btn-warning" onclick="togglePix()"> QR Code PIX</button>
-            <button class="btn btn-primary" onclick="location.reload()"> Atualizar</button>
-        </div>
+<div class="cols">
+<div class="loading"><h3>Sabores Mais Vendidos</h3><div id="top-sab"></div></div>
+<div class="loading"><h3>Pagamentos</h3><div id="top-pag"></div></div>
+<div class="loading"><h3>Status</h3><div id="top-st"></div></div>
+</div>
 
-        <div class="pix-section" id="pix-section">
-            <h3 style="margin-bottom:16px;color:#e67e22;">Pagamento PIX</h3>
-            <div class="pix-grid">
-                <div class="pix-qr">
-                    <img id="pix-img" src="/pix/qrcode" alt="QR Code PIX">
-                    <p style="font-size:12px;color:#999;margin-top:8px;">QR Code atualizado automaticamente</p>
-                </div>
-                <div class="pix-info">
-                    <h3>Pague com PIX</h3>
-                    <p style="font-size:14px;color:#555;margin-bottom:8px;">Escaneie o QR Code ao lado ou use a chave abaixo:</p>
-                    <div class="pix-key" id="pix-key-text">124.320.804-08</div>
-                    <button class="btn-copy" onclick="copyPixKey()"> Copiar Chave</button>
-                    <span class="copied-msg" id="copied-msg">Copiado!</span>
-                    <div class="pix-amount">
-                        <label>Valor (opcional):</label>
-                        <input type="number" id="pix-amount-input" step="0.01" min="0" placeholder="Ex: 45,90" oninput="updatePixQr()">
-                        <span style="font-size:13px;color:#999;">R$</span>
-                    </div>
-                    <details style="margin-top:12px;">
-                        <summary style="cursor:pointer;font-size:13px;color:#888;">Código copia e cola (avançado)</summary>
-                        <textarea id="pix-brcode" readonly style="width:100%;height:60px;margin-top:8px;padding:8px;font-size:11px;font-family:monospace;border:1px solid #ddd;border-radius:6px;background:#fafafa;"></textarea>
-                    </details>
-                </div>
-            </div>
-        </div>
+<div class="orders loading">
+<div class="hdr"><span>Pedidos do Dia <span class="bdg" id="o-count">0</span></span></div>
+<div id="o-list"></div>
+</div>
+</div>
 
-        <div class="orders">
-            <h2>
-                <span>Pedidos do Dia <span class="badge" id="order-count">0</span></span>
-                <button class="toggle-pix" onclick="showPixForSelected()"> Gerar PIX p/ Pedido</button>
-            </h2>
-            <div id="orders-list"></div>
-        </div>
-    </div>
+<div id="toast"></div>
 
-    <script>
-        let currentOrders = [];
+<script>
+const C=['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e'];
 
-        function togglePix() {
-            const section = document.getElementById('pix-section');
-            section.classList.toggle('open');
-            if (section.classList.contains('open')) updatePixQr();
-        }
+function toast(msg,type){
+const t=document.getElementById('toast');
+t.className='toast '+type;
+t.innerHTML='<span>'+(type==='success'?'':'')+'</span>'+msg;
+setTimeout(()=>{t.className+=' out';setTimeout(()=>{t.className='toast'},300)},2500)
+}
 
-        function updatePixQr() {
-            const amount = document.getElementById('pix-amount-input').value;
-            const baseUrl = window.location.origin;
-            let url = baseUrl + '/pix/qrcode';
-            if (amount && parseFloat(amount) > 0) url += '?amount=' + parseFloat(amount);
-            document.getElementById('pix-img').src = url + '&t=' + Date.now();
+function bar(v,m,c,i){
+const p=m>0?v/m*100:0;
+return'<div class="bar-bg"><div class="bar" style="width:0%;background:'+c+'"></div></div>'
+}
 
-            fetch(url + '&format=brcode&t=' + Date.now())
-                .then(r => r.text())
-                .then(t => document.getElementById('pix-brcode').value = t)
-                .catch(() => {});
-        }
+function procAna(ps){
+const s={},pg={},st={};let tot=0,q=0,lc=0;
+ps.forEach(p=>{tot+=p.total_pedido||0;lc+=p.lucro_pedido||0;q++;
+const mt=p.metodo_pagamento||'?';pg[mt]=(pg[mt]||0)+1;
+const stt=p.status||'recebido';st[stt]=(st[stt]||0)+1;
+try{JSON.parse(p.itens_pedido||'[]').forEach(i=>{const n=i.sabor||'?';s[n]=(s[n]||0)+(i.quantidade||1)})}catch(e){}});
+document.getElementById('t-avg').textContent='R$'+(q>0?(tot/q).toFixed(2):'0,00');
+document.getElementById('t-profit').textContent='R$'+lc.toFixed(2);
 
-        function copyPixKey() {
-            const key = document.getElementById('pix-key-text').textContent;
-            navigator.clipboard.writeText(key).then(() => {
-                const msg = document.getElementById('copied-msg');
-                msg.style.display = 'inline';
-                setTimeout(() => msg.style.display = 'none', 2000);
-            });
-        }
+const ss=Object.entries(s).sort((a,b)=>b[1]-a[1]),mx=ss.length?ss[0][1]:1;
+document.getElementById('top-sab').innerHTML=ss.length?ss.map(([n,q],i)=>'<div class="item"><span class="l">'+(i+1)+'. '+n+'</span><span class="r">'+q+'x</span></div>'+bar(q,mx,C[i%8])).join(''):'<div class="item" style="color:#999">Nenhum</div>';
 
-        function showPixForSelected() {
-            togglePix();
-            if (currentOrders.length > 0) {
-                const total = currentOrders.reduce((s, p) => s + (p.total_pedido || 0), 0);
-                document.getElementById('pix-amount-input').value = total.toFixed(2);
-                updatePixQr();
-            }
-        }
+const mp=Math.max(...Object.values(pg),1);
+document.getElementById('top-pag').innerHTML=Object.entries(pg).sort((a,b)=>b[1]-a[1]).map(([m,q],i)=>'<div class="item"><span class="l">'+m+'</span><span class="r">'+q+'</span></div>'+bar(q,mp,C[i%8])).join('');
 
-        function generatePixForOrder(orderNum, total) {
-            togglePix();
-            document.getElementById('pix-amount-input').value = total.toFixed(2);
-            updatePixQr();
-            document.getElementById('pix-section').scrollIntoView({ behavior: 'smooth' });
-        }
+const SL={recebido:'Recebido',preparando:'Preparando',saiu:'Saiu',entregue:'Entregue',cancelado:'Cancelado'};
+const SC={recebido:'#ffeaa7',preparando:'#81ecec',saiu:'#74b9ff',entregue:'#55efc4',cancelado:'#ff7675'};
+const ms=Math.max(...Object.values(st),1);
+document.getElementById('top-st').innerHTML=Object.entries(st).sort((a,b)=>b[1]-a[1]).map(([s,q])=>'<div class="item"><span class="l">'+(SL[s]||s)+'</span><span class="r" style="color:'+(SC[s]||'#888')+'">'+q+'</span></div>'+bar(q,ms,SC[s]||'#888')).join('');
 
-        const STATUS_MAP = {
-            'recebido': 'Recebido', 'preparando': 'Preparando',
-            'saiu': 'Saiu p/ Entrega', 'entregue': 'Entregue', 'cancelado': 'Cancelado'
-        };
+setTimeout(()=>{document.querySelectorAll('.bar').forEach((b,i)=>{b.style.width=b.parentElement.previousElementSibling?b.dataset.pct+'%':'0'})},100)
+}
 
-        async function loadData() {
-            try {
-                const [pedidosRes, statsRes, healthRes] = await Promise.all([
-                    fetch('/admin/pedidos'), fetch('/admin/stats'), fetch('/health')
-                ]);
-                const pedidos = await pedidosRes.json();
-                const stats = await statsRes.json();
-                const health = await healthRes.json();
-                currentOrders = pedidos.pedidos || [];
+const SM={recebido:'Recebido',preparando:'Preparando',saiu:'Saiu p/ Entrega',entregue:'Entregue',cancelado:'Cancelado'};
+const ST={recebido:'st-r',preparando:'st-p',saiu:'st-s',entregue:'st-e',cancelado:'st-c'};
 
-                document.getElementById('total-orders').textContent = pedidos.total;
-                document.getElementById('total-revenue').textContent = `R$ ${(stats.lucro_dia || 0).toFixed(2)}`;
-                document.getElementById('total-profit').textContent = `R$ ${(stats.lucro_dia || 0).toFixed(2)}`;
-                document.getElementById('order-count').textContent = pedidos.total;
+async function cancelar(num,btn){
+if(!confirm('Cancelar pedido #'+num+'?'))return;
+btn.disabled=true;btn.textContent='...';
+try{
+const r=await fetch('/admin/pedido/'+num+'/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'cancelado'})});
+if(!r.ok)throw Error();
+toast('Pedido #'+num+' cancelado','success');
+load();
+}catch(e){toast('Erro ao cancelar pedido','error');btn.disabled=false;btn.textContent='Cancelar'}
+}
 
-                const statusEl = document.getElementById('status-online');
-                statusEl.textContent = health.status === 'healthy' ? ' Online' : ' Offline';
-                statusEl.style.color = health.status === 'healthy' ? '#27ae60' : '#e74c3c';
+function removeLoading(){
+document.querySelectorAll('.loading').forEach(el=>el.classList.remove('loading'))
+}
 
-                const list = document.getElementById('orders-list');
-                if (!currentOrders.length) {
-                    list.innerHTML = '<div class="empty"><p> Nenhum pedido hoje</p><span>Os pedidos aparecerão aqui automaticamente</span></div>';
-                    return;
-                }
-
-                list.innerHTML = currentOrders.map(p => {
-                    let itens = p.itens_pedido || '[]';
-                    try { itens = JSON.parse(itens).map(i => `${i.quantidade}x ${i.sabor}${i.tamanho ? ' ('+i.tamanho+')' : ''}`).join(', '); } catch(e) {}
-                    const hora = p.timestamp ? p.timestamp.slice(11, 16) : '';
-                    const isPix = (p.metodo_pagamento || '').toLowerCase() === 'pix';
-                    return `
-                        <div class="order-item">
-                            <div class="order-num">#${p.numero_do_dia}</div>
-                            <div class="order-info">
-                                <div class="items">${itens}</div>
-                                <div class="meta">${hora} &middot; ${p.metodo_pagamento || ''}${isPix ? '<span class="pix-badge">PIX</span>' : ''} &middot; ${p.endereco || 'Sem endereço'}</div>
-                            </div>
-                            <span class="order-status status-${p.status || 'recebido'}">${STATUS_MAP[p.status] || p.status}</span>
-                            <div class="order-actions">
-                                <div class="order-price">R$ ${(p.total_pedido || 0).toFixed(2)}</div>
-                                ${isPix ? `<button class="order-pix-btn" onclick="generatePixForOrder(${p.numero_do_dia}, ${p.total_pedido || 0})"> PIX</button>` : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } catch(e) {
-                document.getElementById('orders-list').innerHTML = '<div class="empty"><p> Erro ao carregar</p><span>Tente novamente</span></div>';
-            }
-        }
-
-        loadData();
-        setInterval(loadData, 30000);
-    </script>
+async function load(){
+try{
+const [pr,hr]=await Promise.all([fetch('/admin/pedidos'),fetch('/health')]);
+const p=await pr.json(),h=await hr.json(),os=p.pedidos||[];
+removeLoading();
+document.getElementById('t-orders').textContent=p.total;
+document.getElementById('o-count').textContent=p.total;
+const se=document.getElementById('s-online');
+se.textContent=h.status==='healthy'?'Online':'Offline';
+se.style.color=h.status==='healthy'?'#27ae60':'#e74c3c';
+procAna(os);
+const rev=os.reduce((s,o)=>s+(o.total_pedido||0),0);
+document.getElementById('t-revenue').textContent='R$'+rev.toFixed(2);
+const el=document.getElementById('o-list');
+if(!os.length){el.innerHTML='<div class="empty">Nenhum pedido hoje</div>';return}
+el.innerHTML=os.map(o=>{let it;
+try{it=JSON.parse(o.itens_pedido||'[]').map(i=>i.quantidade+'x '+i.sabor+(i.tamanho?'('+i.tamanho+')':'')).join(', ')}catch(e){it=o.itens_pedido}
+const hr=o.timestamp?o.timestamp.slice(11,16):'',isP=(o.metodo_pagamento||'').toLowerCase()==='pix',isC=o.status==='cancelado';
+return'<div class="o"><span class="od">#'+o.numero_do_dia+'</span><div class="oi"><div class="t">'+it+'</div><div class="m">'+hr+' &middot; '+o.endereco+(isP?' <span class="pb">PIX</span>':'')+'</div></div><span class="st '+(ST[o.status]||'st-r')+'">'+(SM[o.status]||o.status)+'</span>'+(isC?'':'<button class="cb" onclick="cancelar('+o.numero_do_dia+',this)">Cancelar</button>')+'<span class="op">R$'+(o.total_pedido||0).toFixed(2)+'</span></div>'}).join('');
+}catch(e){removeLoading();document.getElementById('o-list').innerHTML='<div class="empty">Erro ao carregar</div>'}
+}
+load();setInterval(load,30000);
+</script>
 </body>
 </html>"""

@@ -8,6 +8,7 @@ class TamanhoPizza(str, Enum):
     M = "M"
     G = "G"
     GG = "GG"
+    NA = "NA"
 
 
 class MetodoPagamento(str, Enum):
@@ -57,15 +58,19 @@ class DadosPedido(BaseModel):
 
 class SaborCardapio(BaseModel):
     nome: str
+    nome_exibicao: Optional[str] = None
     tamanhos: dict[TamanhoPizza, ItemCardapio]
+    categoria: str = "tradicional"
     
     @property
     def nome_formatado(self) -> str:
-        return self.nome.replace("_", " ").title()
+        return self.nome_exibicao if self.nome_exibicao else self.nome.replace("_", " ").title()
 
 
 class Cardapio(BaseModel):
     sabores: dict[str, SaborCardapio]
+    bebidas: list[dict] = []
+    adicionais: list[dict] = []
     
     def get_preco(self, sabor: str, tamanho: TamanhoPizza) -> Optional[float]:
         sabor_norm = sabor.lower().replace(" ", "_")

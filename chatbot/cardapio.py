@@ -5,47 +5,87 @@ from pathlib import Path
 
 
 CARDAPIO_PADRAO = {
-    "margherita": {
-        "M": {"preco": 35.00, "custo": 12.50, "descricao": "Molho, muçarela e manjericão."},
-        "G": {"preco": 45.00, "custo": 16.00, "descricao": "Molho, muçarela e manjericão."},
-        "GG": {"preco": 55.00, "custo": 20.00, "descricao": "Molho, muçarela e manjericão."}
-    },
-    "calabresa": {
-        "M": {"preco": 40.00, "custo": 15.00, "descricao": "Molho, muçarela, calabresa e cebola."},
-        "G": {"preco": 52.00, "custo": 19.50, "descricao": "Molho, muçarela, calabresa e cebola."},
-        "GG": {"preco": 63.00, "custo": 24.00, "descricao": "Molho, muçarela, calabresa e cebola."}
-    },
-    "portuguesa": {
-        "M": {"preco": 45.00, "custo": 17.00, "descricao": "Molho, muçarela, presunto, ovos, cebola e azeitona."},
-        "G": {"preco": 58.00, "custo": 22.00, "descricao": "Molho, muçarela, presunto, ovos, cebola e azeitona."},
-        "GG": {"preco": 70.00, "custo": 26.50, "descricao": "Molho, muçarela, presunto, ovos, cebola e azeitona."}
-    },
-    "quatro queijos": {
-        "M": {"preco": 50.00, "custo": 20.00, "descricao": "Molho, muçarela, parmesão, gorgonzola e provolone."},
-        "G": {"preco": 65.00, "custo": 25.00, "descricao": "Molho, muçarela, parmesão, gorgonzola e provolone."},
-        "GG": {"preco": 78.00, "custo": 30.00, "descricao": "Molho, muçarela, parmesão, gorgonzola e provolone."}
-    },
-    "frango com catupiry": {
-        "M": {"preco": 55.00, "custo": 21.00, "descricao": "Molho, muçarela, frango desfiado e catupiry."},
-        "G": {"preco": 72.00, "custo": 28.00, "descricao": "Molho, muçarela, frango desfiado e catupiry."},
-        "GG": {"preco": 85.00, "custo": 33.00, "descricao": "Molho, muçarela, frango desfiado e catupiry."}
-    },
-    "chocolate branco com morango": {
-        "M": {"preco": 50.00, "custo": 18.00, "descricao": "Chocolate branco cremoso e morangos frescos."},
-        "G": {"preco": 65.00, "custo": 24.00, "descricao": "Chocolate branco cremoso e morangos frescos."},
-        "GG": {"preco": 78.00, "custo": 29.00, "descricao": "Chocolate branco cremoso e morangos frescos."}
-    },
-    "chocolate preto com confetti": {
-        "M": {"preco": 48.00, "custo": 17.50, "descricao": "Chocolate meio amargo e granulados coloridos."},
-        "G": {"preco": 62.00, "custo": 22.50, "descricao": "Chocolate meio amargo e granulados coloridos."},
-        "GG": {"preco": 75.00, "custo": 28.00, "descricao": "Chocolate meio amargo e granulados coloridos."}
-    },
-    "camarao com catupiry": {
-        "M": {"preco": 65.00, "custo": 28.00, "descricao": "Molho, muçarela, camarão salteado e catupiry."},
-        "G": {"preco": 85.00, "custo": 35.00, "descricao": "Molho, muçarela, camarão salteado e catupiry."},
-        "GG": {"preco": 100.00, "custo": 42.00, "descricao": "Molho, muçarela, camarão salteado e catupiry."}
+    "sabores": {
+        "margherita_classica": {
+            "categoria": "tradicional",
+            "nome_exibicao": "Margherita Cl\u00e1ssica",
+            "M": {"preco": 38.90, "custo": 14.00, "descricao": "Muçarela, rodelas de tomate fresco, manjericão e azeite de oliva."},
+            "G": {"preco": 48.90, "custo": 18.00, "descricao": "Muçarela, rodelas de tomate fresco, manjericão e azeite de oliva."}
+        },
+        "calabresa_especial": {
+            "categoria": "tradicional",
+            "nome_exibicao": "Calabresa Especial",
+            "M": {"preco": 40.00, "custo": 15.00, "descricao": "Muçarela, calabresa fatiada e cebola roxa."},
+            "G": {"preco": 50.00, "custo": 19.00, "descricao": "Muçarela, calabresa fatiada e cebola roxa."}
+        },
+        "frango_catupiry": {
+            "categoria": "tradicional",
+            "nome_exibicao": "Frango com Catupiry",
+            "M": {"preco": 42.00, "custo": 16.00, "descricao": "Peito de frango desfiado temperado e o legítimo Catupiry."},
+            "G": {"preco": 54.00, "custo": 20.00, "descricao": "Peito de frango desfiado temperado e o legítimo Catupiry."}
+        },
+        "portuguesa": {
+            "categoria": "tradicional",
+            "nome_exibicao": "Portuguesa",
+            "M": {"preco": 42.00, "custo": 16.00, "descricao": "Presunto, ovos, cebola, ervilha, muçarela e azeitonas pretas."},
+            "G": {"preco": 54.00, "custo": 20.00, "descricao": "Presunto, ovos, cebola, ervilha, muçarela e azeitonas pretas."}
+        },
+        "quatro_queijos_casa": {
+            "categoria": "especial",
+            "nome_exibicao": "Quatro Queijos da Casa",
+            "M": {"preco": 46.00, "custo": 18.00, "descricao": "Muçarela, provolone, gorgonzola e creme de requeijão maçaricado."},
+            "G": {"preco": 58.00, "custo": 22.00, "descricao": "Muçarela, provolone, gorgonzola e creme de requeijão maçaricado."}
+        },
+        "parma_rucula": {
+            "categoria": "especial",
+            "nome_exibicao": "Parma & R\u00facula",
+            "M": {"preco": 49.90, "custo": 20.00, "descricao": "Muçarela, presunto do tipo Parma, rúcula fresca e lascas de parmesão."},
+            "G": {"preco": 62.00, "custo": 25.00, "descricao": "Muçarela, presunto do tipo Parma, rúcula fresca e lascas de parmesão."}
+        },
+        "pepperoni_hot_honey": {
+            "categoria": "especial",
+            "nome_exibicao": "Pepperoni & Hot Honey",
+            "M": {"preco": 48.00, "custo": 19.00, "descricao": "Muçarela, pepperoni artesanal e um fio de mel picante infusionado na casa."},
+            "G": {"preco": 60.00, "custo": 24.00, "descricao": "Muçarela, pepperoni artesanal e um fio de mel picante infusionado na casa."}
+        },
+        "brigadeiro_premium": {
+            "categoria": "doce",
+            "nome_exibicao": "Brigadeiro Premium",
+            "M": {"preco": 35.00, "custo": 12.00, "descricao": "Chocolate ao leite artesanal e granulado belga."}
+        },
+        "romeu_julieta": {
+            "categoria": "doce",
+            "nome_exibicao": "Romeu e Julieta",
+            "M": {"preco": 36.00, "custo": 13.00, "descricao": "Muçarela, goiabada cascão cremosa e requeijão de corte."}
+        }
     }
 }
+
+BEBIDAS_PADRAO = [
+    {"chave": "coca_2l", "nome": "Coca-Cola 2L", "preco": 12.00, "custo": 5.00},
+    {"chave": "coca_lata", "nome": "Coca-Cola Lata", "preco": 6.00, "custo": 2.50},
+    {"chave": "guarana_2l", "nome": "Guaraná 2L", "preco": 10.00, "custo": 4.00},
+    {"chave": "guarana_lata", "nome": "Guaraná Lata", "preco": 5.00, "custo": 2.00},
+    {"chave": "fanta_laranja", "nome": "Fanta Laranja 2L", "preco": 10.00, "custo": 4.00},
+    {"chave": "suco_laranja", "nome": "Suco de Laranja", "preco": 8.00, "custo": 3.00},
+    {"chave": "suco_uva", "nome": "Suco de Uva", "preco": 8.00, "custo": 3.00},
+    {"chave": "agua", "nome": "Água Mineral", "preco": 4.00, "custo": 1.50},
+    {"chave": "agua_gas", "nome": "Água com Gás", "preco": 5.00, "custo": 2.00},
+    {"chave": "heineken", "nome": "Cerveja Heineken", "preco": 8.00, "custo": 4.50},
+    {"chave": "brahma", "nome": "Cerveja Brahma", "preco": 6.00, "custo": 3.00},
+    {"chave": "skol", "nome": "Cerveja Skol", "preco": 5.00, "custo": 2.50},
+]
+
+ADICIONAIS_PADRAO = [
+    {"chave": "borda_catupiry", "nome": "Borda Recheada Catupiry", "preco": 8.00, "custo": 3.00},
+    {"chave": "borda_cheddar", "nome": "Borda Recheada Cheddar", "preco": 8.00, "custo": 3.00},
+    {"chave": "extra_mucarela", "nome": "Extra Muçarela", "preco": 5.00, "custo": 2.00},
+    {"chave": "extra_catupiry", "nome": "Extra Catupiry", "preco": 6.00, "custo": 2.50},
+    {"chave": "extra_cheddar", "nome": "Extra Cheddar", "preco": 6.00, "custo": 2.50},
+    {"chave": "bacon_extra", "nome": "Bacon Extra", "preco": 7.00, "custo": 3.00},
+    {"chave": "molho_especial", "nome": "Molho Especial", "preco": 3.00, "custo": 1.00},
+    {"chave": "oregano", "nome": "Orégano", "preco": 0.00, "custo": 0.00},
+]
 
 
 def carregar_cardapio_json(caminho: str = "cardapio.json") -> Cardapio:
@@ -63,31 +103,45 @@ def carregar_cardapio_json(caminho: str = "cardapio.json") -> Cardapio:
 
 def _dict_para_cardapio(data: dict) -> Cardapio:
     sabores = {}
-    for nome, tamanhos in data.items():
-        tamanhos_tipados = {}
-        for tam, info in tamanhos.items():
-            tamanho = TamanhoPizza(tam)
-            tamanhos_tipados[tamanho] = ItemCardapio(
-                preco=info["preco"],
-                custo=info["custo"],
-                descricao=info.get("descricao", "")
-            )
-        sabores[nome] = SaborCardapio(nome=nome, tamanhos=tamanhos_tipados)
-    return Cardapio(sabores=sabores)
+    for nome, tamanhos in data.get("sabores", data).items():
+        # Support both old and new format
+        if isinstance(tamanhos, dict):
+            categoria = tamanhos.get("categoria", "tradicional") if isinstance(tamanhos.get("categoria"), str) else "tradicional"
+            nome_exibicao = tamanhos.get("nome_exibicao") if isinstance(tamanhos.get("nome_exibicao"), str) else None
+            tamanhos_tipados = {}
+            for tam, info in tamanhos.items():
+                if tam in [t.value for t in TamanhoPizza]:
+                    tamanho = TamanhoPizza(tam)
+                    tamanhos_tipados[tamanho] = ItemCardapio(
+                        preco=info["preco"],
+                        custo=info["custo"],
+                        descricao=info.get("descricao", "")
+                    )
+            if tamanhos_tipados:
+                sabores[nome] = SaborCardapio(nome=nome, nome_exibicao=nome_exibicao, tamanhos=tamanhos_tipados, categoria=categoria)
+
+    return Cardapio(
+        sabores=sabores,
+        bebidas=data.get("bebidas", BEBIDAS_PADRAO),
+        adicionais=data.get("adicionais", ADICIONAIS_PADRAO),
+    )
 
 
 def salvar_cardapio_json(cardapio: Cardapio, caminho: str = "cardapio.json") -> bool:
     """Salva cardápio em arquivo JSON."""
     try:
-        data = {}
+        data = {"sabores": {}, "bebidas": cardapio.bebidas, "adicionais": cardapio.adicionais}
         for nome, sabor in cardapio.sabores.items():
-            data[nome] = {}
+            entry = {"categoria": sabor.categoria}
+            if sabor.nome_exibicao:
+                entry["nome_exibicao"] = sabor.nome_exibicao
             for tamanho, info in sabor.tamanhos.items():
-                data[nome][tamanho.value] = {
+                entry[tamanho.value] = {
                     "preco": info.preco,
                     "custo": info.custo,
                     "descricao": info.descricao
                 }
+            data["sabores"][nome] = entry
         with open(caminho, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
         return True

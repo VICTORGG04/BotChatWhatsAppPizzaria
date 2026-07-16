@@ -25,7 +25,7 @@ def _emv_field(tag: str, value: str) -> str:
 
 def gerar_brcode(
     pix_key: str,
-    merchant_name: str = "PyPizzas",
+    merchant_name: str = "PayPizzas",
     merchant_city: str = "Sao Paulo",
     amount: Optional[float] = None,
     txid: str = "***",
@@ -86,7 +86,7 @@ def gerar_pix_payload(
 ) -> str:
     return gerar_brcode(
         pix_key=settings.pix_key,
-        merchant_name="PyPizzas",
+        merchant_name="PayPizzas",
         merchant_city="Sao Paulo",
         amount=amount,
         txid="***",
