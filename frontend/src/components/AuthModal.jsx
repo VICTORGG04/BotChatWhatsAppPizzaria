@@ -62,29 +62,44 @@ export default function AuthModal({ open, onClose, onToast }) {
   });
 
   const handleFacebookLogin = useCallback(() => {
-    if (!window.FB) {
-      onToast('Facebook SDK não carregado. Tente novamente.', 'error');
+    if (!window.FB || typeof window.FB.login !== 'function') {
+      onToast('Facebook SDK não carregado. Recarregue a página.', 'error');
       return;
     }
-    window.FB.login(async (response) => {
-      if (response.authResponse) {
-        try {
-          const data = await api.auth.facebookLogin(response.authResponse.accessToken);
-          if (!data.token) throw new Error('Token não recebido do servidor');
-          localStorage.setItem('token', data.token);
-          window.location.reload();
-        } catch (err) {
-          if (err.message.includes('nao configurado')) {
-            onToast('Facebook Login não configurado no servidor (falta FACEBOOK_APP_SECRET?)', 'error');
-          } else {
-            onToast('Erro ao autenticar com Facebook: ' + err.message, 'error');
+
+    let popupOpened = false;
+
+    try {
+      window.FB.login(async (response) => {
+        popupOpened = true;
+        if (response.authResponse) {
+          try {
+            const data = await api.auth.facebookLogin(response.authResponse.accessToken);
+            if (!data.token) throw new Error('Token não recebido do servidor');
+            localStorage.setItem('token', data.token);
+            window.location.reload();
+          } catch (err) {
+            if (err.message.includes('nao configurado')) {
+              onToast('Facebook Login não configurado no servidor (falta FACEBOOK_APP_SECRET?)', 'error');
+            } else {
+              onToast('Erro ao autenticar com Facebook: ' + err.message, 'error');
+            }
           }
+        } else {
+          const reason = response.status ? ` (status: ${response.status})` : '';
+          onToast('Login do Facebook cancelado' + reason, 'error');
         }
-      } else {
-        const reason = response.status ? ` (status: ${response.status})` : '';
-        onToast('Login do Facebook cancelado' + reason, 'error');
+      }, { scope: 'public_profile,email' });
+    } catch (err) {
+      onToast('Erro ao chamar Facebook: ' + err.message, 'error');
+      return;
+    }
+
+    setTimeout(() => {
+      if (!popupOpened) {
+        onToast('Popup bloqueado! Permita popups para este site e tente novamente.', 'error');
       }
-    }, { scope: 'public_profile,email' });
+    }, 3000);
   }, [onToast]);
 
   const handleAddEndereco = async () => {
