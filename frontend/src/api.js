@@ -18,6 +18,8 @@ export const api = {
     login: (email, senha) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, senha }) }),
     me: () => request('/auth/me'),
     update: (data) => request('/auth/me', { method: 'PUT', body: JSON.stringify(data) }),
+    googleLogin: (credential) => request('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) }),
+    facebookLogin: (accessToken) => request('/auth/facebook', { method: 'POST', body: JSON.stringify({ access_token: accessToken }) }),
   },
   enderecos: {
     listar: () => request('/auth/enderecos'),

@@ -315,6 +315,93 @@ def api_remover_favorito(id):
     return jsonify({"ok": True})
 
 
+@app.route('/api/auth/google', methods=['POST'])
+def api_auth_google():
+    from chatbot.storage.user_db import buscar_usuario_por_google_id, criar_usuario_social, vincular_google_id, buscar_usuario_por_email
+    data = request.get_json()
+    if not data or not data.get("credential"):
+        return jsonify({"erro": "Token do Google obrigatorio"}), 400
+    try:
+        from google.oauth2 import id_token as google_id_token
+        from google.auth.transport import requests as google_requests
+        google_client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
+        if not google_client_id:
+            return jsonify({"erro": "Google Login nao configurado"}), 501
+        info = google_id_token.verify_oauth2_token(data["credential"], google_requests.Request(), google_client_id)
+        if not info.get("email"):
+            return jsonify({"erro": "Email nao fornecido pelo Google"}), 400
+        google_id = info["sub"]
+        email = info["email"].lower()
+        nome = info.get("name", "")
+        existing = buscar_usuario_por_google_id(google_id)
+        if existing:
+            user = existing
+        else:
+            by_email = buscar_usuario_por_email(email)
+            if by_email:
+                user = vincular_google_id(by_email.id, google_id)
+            else:
+                user = criar_usuario_social(email=email, nome=nome, google_id=google_id)
+        token = _gerar_token(user.id)
+        return jsonify({"token": token, "user": user.model_dump()})
+    except ValueError as e:
+        logger.error("Google auth error", error=str(e))
+        return jsonify({"erro": "Token Google invalido"}), 401
+    except Exception as e:
+        logger.error("Google auth exception", error=str(e))
+        return jsonify({"erro": "Erro na autenticacao Google"}), 500
+
+
+@app.route('/api/auth/facebook', methods=['POST'])
+def api_auth_facebook():
+    from chatbot.storage.user_db import buscar_usuario_por_facebook_id, criar_usuario_social, vincular_facebook_id, buscar_usuario_por_email
+    import requests as http_requests
+    data = request.get_json()
+    if not data or not data.get("access_token"):
+        return jsonify({"erro": "Token do Facebook obrigatorio"}), 400
+    try:
+        access_token = data["access_token"]
+        app_id = os.environ.get("FACEBOOK_APP_ID", "")
+        app_secret = os.environ.get("FACEBOOK_APP_SECRET", "")
+        if not app_id or not app_secret:
+            return jsonify({"erro": "Facebook Login nao configurado"}), 501
+        # Verify token with Facebook Graph API
+        verify = http_requests.get(
+            f"https://graph.facebook.com/debug_token",
+            params={"input_token": access_token, "access_token": f"{app_id}|{app_secret}"}
+        )
+        if not verify.ok:
+            return jsonify({"erro": "Token Facebook invalido"}), 401
+        token_data = verify.json().get("data", {})
+        if not token_data.get("is_valid"):
+            return jsonify({"erro": "Token Facebook invalido"}), 401
+        fb_user_id = token_data.get("user_id")
+        # Get user info
+        me = http_requests.get(
+            f"https://graph.facebook.com/me",
+            params={"access_token": access_token, "fields": "id,name,email"}
+        )
+        if not me.ok:
+            return jsonify({"erro": "Nao foi possivel obter dados do Facebook"}), 401
+        fb_info = me.json()
+        email = (fb_info.get("email") or f"fb_{fb_user_id}@facebook.com").lower()
+        nome = fb_info.get("name", "")
+        existing = buscar_usuario_por_facebook_id(fb_user_id)
+        if existing:
+            user = existing
+        else:
+            by_email = buscar_usuario_por_email(email) if fb_info.get("email") else None
+            if by_email:
+                user = vincular_facebook_id(by_email.id, fb_user_id)
+            else:
+                user = criar_usuario_social(email=email, nome=nome, facebook_id=fb_user_id)
+        token = _gerar_token(user.id)
+        return jsonify({"token": token, "user": user.model_dump()})
+    except Exception as e:
+        logger.error("Facebook auth error", error=str(e))
+        return jsonify({"erro": "Erro na autenticacao Facebook"}), 500
+
+
 # ─── WhatsApp Webhook ───────────────────────────────────────
 
 @app.route('/webhook', methods=['GET'])
@@ -370,7 +457,15 @@ def cardapio_page(subpath=None):
     if os.path.exists(os.path.join(static_dir, "index.html")):
         if subpath and os.path.exists(os.path.join(static_dir, subpath)):
             return send_from_directory(static_dir, subpath)
-        return send_from_directory(static_dir, "index.html")
+        # Inject env vars into HTML
+        index_path = os.path.join(static_dir, "index.html")
+        with open(index_path, 'r', encoding='utf-8') as f:
+            html = f.read()
+        google_id = os.environ.get("GOOGLE_CLIENT_ID", "")
+        fb_app_id = os.environ.get("FACEBOOK_APP_ID", "")
+        inject = f'<script>window.__GOOGLE_CLIENT_ID="{google_id}";window.__FB_APP_ID="{fb_app_id}";</script>'
+        html = html.replace('</head>', inject + '</head>')
+        return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
     # Fallback to server-generated HTML
     import importlib.util
     import os as _os

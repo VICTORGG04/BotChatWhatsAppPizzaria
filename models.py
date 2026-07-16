@@ -163,6 +163,8 @@ class User(BaseModel):
     senha_hash: str = ""
     nome: str = ""
     telefone: str = ""
+    google_id: str = ""
+    facebook_id: str = ""
     created_at: str = ""
 
 

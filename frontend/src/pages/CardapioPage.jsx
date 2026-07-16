@@ -10,9 +10,9 @@ import AuthModal from '../components/AuthModal';
 import LojaInfo from '../components/LojaInfo';
 
 const TABS = [
-  { id: 'tradicionais', label: '🍕 Tradicionais', desc: 'Todas as pizzas tradicionais acompanham molho de tomate artesanal, muçarela e orégano.' },
-  { id: 'especiais', label: '👑 Especiais', desc: 'Criações exclusivas com ingredientes selecionados.' },
-  { id: 'doces', label: '🍫 Doces', desc: 'A sobremesa ideal em formato de pizza.' },
+  { id: 'tradicional', label: '🍕 Tradicionais', desc: 'Todas as pizzas tradicionais acompanham molho de tomate artesanal, muçarela e orégano.' },
+  { id: 'especial', label: '👑 Especiais', desc: 'Criações exclusivas com ingredientes selecionados.' },
+  { id: 'doce', label: '🍫 Doces', desc: 'A sobremesa ideal em formato de pizza.' },
   { id: 'bebidas', label: '🥤 Bebidas', desc: '' },
   { id: 'combos', label: '🔥 Combos', desc: '' },
   { id: 'loja', label: '📍 Loja', desc: '' },
@@ -20,7 +20,7 @@ const TABS = [
 
 export default function CardapioPage() {
   const [data, setData] = useState(null);
-  const [activeTab, setActiveTab] = useState('tradicionais');
+  const [activeTab, setActiveTab] = useState('tradicional');
   const [cartOpen, setCartOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
@@ -85,9 +85,9 @@ export default function CardapioPage() {
               <PizzaCard key={s.chave} sabor={s} adicionais={data?.adicionais || []}
                 onToast={showToast} />
             ))}
-            {saboresPorCategoria[t.id]?.length > 0 && t.id !== 'doces' && (
-              <button className="meio-btn" onClick={() => setActiveTab('meio-modal')}>Montar Pizza Meio a Meio</button>
-            )}
+          {saboresPorCategoria[t.id]?.length > 0 && t.id !== 'doce' && (
+            <button className="meio-btn" onClick={() => setActiveTab('meio-modal')}>Montar Pizza Meio a Meio</button>
+          )}
           </div>
         ))}
 
@@ -109,7 +109,7 @@ export default function CardapioPage() {
 
         {/* Meio a Meio Modal */}
         {activeTab === 'meio-modal' && (
-          <MeioModal sabores={data?.sabores || {}} onClose={() => setActiveTab('tradicionais')} onToast={showToast} />
+          <MeioModal sabores={data?.sabores || {}} onClose={() => setActiveTab('tradicional')} onToast={showToast} />
         )}
       </div>
 
