@@ -30,12 +30,12 @@ def gerar_cardapio_html(empresa_numero: str, cardapio) -> str:
     }
 
     combos = [
-        {"nome": "Combo Familia", "descricao": "2 pizzas G + 1 Coca-Cola 2L + 1 borda recheada", "preco": 139.90, "economia": 10.10, "icone": "👨‍👩‍👧‍👦"},
-        {"nome": "Combo Casal", "descricao": "1 pizza G + 1 suco + 1 borda recheada", "preco": 74.90, "economia": 6.10, "icone": "💑"},
-        {"nome": "Combo Festa", "descricao": "4 pizzas M + 2 Coca 2L + 2 bordas", "preco": 199.90, "economia": 20.10, "icone": "🎉"},
-        {"nome": "Promo Semana", "descricao": "Pizza G + borda gratis + 1 Coca lata", "preco": 72.90, "economia": 6.10, "icone": "🔥"},
-        {"nome": "Combo Kids", "descricao": "Pizza M + suco + brinde", "preco": 52.90, "economia": 5.10, "icone": "🧒"},
-        {"nome": "2 Pizzas G", "descricao": "2 pizzas G + 1 Coca-Cola 2L", "preco": 129.90, "economia": 12.10, "icone": "🍕🍕"},
+        {"chave": "combo_familia", "nome": "Combo Familia", "descricao": "2 pizzas G + 1 Coca-Cola 2L + 1 borda recheada", "preco": 139.90, "economia": 10.10, "icone": "👨‍👩‍👧‍👦"},
+        {"chave": "combo_casal", "nome": "Combo Casal", "descricao": "1 pizza G + 1 suco + 1 borda recheada", "preco": 74.90, "economia": 6.10, "icone": "💑"},
+        {"chave": "combo_festa", "nome": "Combo Festa", "descricao": "4 pizzas M + 2 Coca 2L + 2 bordas", "preco": 199.90, "economia": 20.10, "icone": "🎉"},
+        {"chave": "promo_semana", "nome": "Promo Semana", "descricao": "Pizza G + borda gratis + 1 Coca lata", "preco": 72.90, "economia": 6.10, "icone": "🔥"},
+        {"chave": "combo_kids", "nome": "Combo Kids", "descricao": "Pizza M + suco + brinde", "preco": 52.90, "economia": 5.10, "icone": "🧒"},
+        {"chave": "duas_pizzas_g", "nome": "2 Pizzas G", "descricao": "2 pizzas G + 1 Coca-Cola 2L", "preco": 129.90, "economia": 12.10, "icone": "🍕🍕"},
     ]
 
     return _HTML_TEMPLATE \
@@ -202,7 +202,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <button class="tab" data-tab="especiais">👑 Especiais</button>
 <button class="tab" data-tab="doces">🍫 Doces</button>
 <button class="tab" data-tab="bebidas">🥤 Bebidas</button>
-<button class="tab" data-tab="extras">🧀 Extras</button>
 <button class="tab" data-tab="combos">🔥 Combos</button>
 <button class="tab" data-tab="loja">📍 Loja</button>
 </div>
@@ -210,7 +209,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="tab-content" id="tabEspeciais"><p class="cat-desc">Criações exclusivas com ingredientes selecionados.</p></div>
 <div class="tab-content" id="tabDoces"><p class="cat-desc">A sobremesa ideal em formato de pizza.</p></div>
 <div class="tab-content" id="tabBebidas"></div>
-<div class="tab-content" id="tabExtras"></div>
 <div class="tab-content" id="tabCombos"></div>
 <div class="tab-content" id="tabLoja"></div>
 </div>
@@ -352,22 +350,12 @@ function renderBebidas() {
     document.getElementById('tabBebidas').innerHTML = h;
 }
 
-function renderAdicionais() {
-    var h = '';
-    for (var i = 0; i < ADICIONAIS.length; i++) {
-        var a = ADICIONAIS[i]; var k = 'adicional:' + a.chave; var q = cart[k] || 0;
-        h += '<div class="simple-card"><div class="sc-info"><div class="sc-nome">' + esc(a.nome) + '</div>';
-        if (a.preco > 0) h += '<div class="sc-preco">R$ ' + a.preco.toFixed(2) + '</div>'; else h += '<div class="sc-preco sc-gratis">Gratis</div>';
-        h += '</div><div class="sc-qty"><button class="qty-minus" data-key="' + k + '" data-delta="-1">&minus;</button><span class="qty-val" id="qty-' + k + '">' + q + '</span><button class="qty-plus" data-key="' + k + '" data-delta="1">+</button></div></div>';
-    }
-    document.getElementById('tabExtras').innerHTML = h;
-}
-
 function renderCombos() {
     var h = '';
     for (var i = 0; i < COMBOS.length; i++) {
         var c = COMBOS[i]; var original = c.preco + c.economia;
-        h += '<div class="combo-card"><div class="combo-icon">' + c.icone + '</div><div class="combo-info"><div class="combo-nome">' + esc(c.nome) + '</div><div class="combo-desc">' + esc(c.descricao) + '</div><div class="combo-preco-box"><span class="combo-original">R$ ' + original.toFixed(2) + '</span> <span class="combo-preco">R$ ' + c.preco.toFixed(2) + '</span></div><div class="combo-economia">Economia de R$ ' + c.economia.toFixed(2) + '</div></div></div>';
+        var k = 'combo:' + c.chave; var q = cart[k] || 0;
+        h += '<div class="combo-card"><div class="combo-icon">' + c.icone + '</div><div class="combo-info"><div class="combo-nome">' + esc(c.nome) + '</div><div class="combo-desc">' + esc(c.descricao) + '</div><div class="combo-preco-box"><span class="combo-original">R$ ' + original.toFixed(2) + '</span> <span class="combo-preco">R$ ' + c.preco.toFixed(2) + '</span></div><div class="combo-economia">Economia de R$ ' + c.economia.toFixed(2) + '</div></div><div class="sc-qty"><button class="qty-minus" data-key="' + k + '" data-delta="-1">&minus;</button><span class="qty-val" id="qty-' + k + '">' + q + '</span><button class="qty-plus" data-key="' + k + '" data-delta="1">+</button></div></div>';
     }
     document.getElementById('tabCombos').innerHTML = h;
 }
@@ -487,6 +475,7 @@ function getItemInfo(key) {
     }
     if (key.indexOf('bebida:') === 0) { var c = key.slice(7); for (var i = 0; i < BEBIDAS.length; i++) { if (BEBIDAS[i].chave === c) return { nome: BEBIDAS[i].nome, cat: 'Bebida', preco: BEBIDAS[i].preco }; } }
     if (key.indexOf('adicional:') === 0) { var c = key.slice(10); for (var i = 0; i < ADICIONAIS.length; i++) { if (ADICIONAIS[i].chave === c) return { nome: ADICIONAIS[i].nome, cat: 'Adicional', preco: ADICIONAIS[i].preco }; } }
+    if (key.indexOf('combo:') === 0) { var c = key.slice(6); for (var i = 0; i < COMBOS.length; i++) { if (COMBOS[i].chave === c) return { nome: COMBOS[i].nome, cat: 'Combo', preco: COMBOS[i].preco }; } }
     return null;
 }
 
@@ -545,6 +534,7 @@ async function finalizarPedido() {
         if (key.indexOf('sabor:') === 0) { var p = key.slice(6).split('-'); categoria = 'sabor'; sabor = p[0]; tamanho = p[1]; }
         else if (key.indexOf('meio:') === 0) { categoria = 'sabor'; sabor = key.slice(5); tamanho = ''; }
         else if (key.indexOf('bebida:') === 0) { categoria = 'bebida'; sabor = key.slice(7); tamanho = ''; }
+        else if (key.indexOf('combo:') === 0) { categoria = 'combo'; sabor = key.slice(6); tamanho = ''; }
         else { categoria = 'adicional'; sabor = key.slice(10); tamanho = ''; }
         itens.push({ categoria: categoria, sabor: sabor, tamanho: tamanho, quantidade: qty, preco: info.preco });
     }
@@ -586,7 +576,6 @@ renderPizzas(TRAD, 'tabTradicionais');
 renderPizzas(ESP, 'tabEspeciais');
 renderPizzas(DOCES, 'tabDoces');
 renderBebidas();
-renderAdicionais();
 renderCombos();
 renderLoja();
 fetch('/api/loja/status').then(function(r){return r.json()}).then(function(d){
