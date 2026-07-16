@@ -226,10 +226,10 @@ export default function AuthModal({ open, onClose, onToast }) {
           {['entrar', 'cadastrar'].map(t => (
             <button key={t} onClick={() => setTab(t)}
               style={{
-                flex: 1, padding: '11px 0', border: 'none',
+                flex: 1, padding: '14px 0', border: 'none',
                 background: tab === t ? 'linear-gradient(135deg,#e74c3c,#c0392b)' : '#0f0f23',
-                color: tab === t ? '#fff' : '#666', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                transition: 'all .2s',
+                color: tab === t ? '#fff' : '#666', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                transition: 'all .2s', letterSpacing: 0.5,
               }}>
               {t === 'entrar' ? '🔑 Entrar' : '📝 Cadastrar'}
             </button>
