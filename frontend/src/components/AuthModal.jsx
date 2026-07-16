@@ -85,7 +85,7 @@ export default function AuthModal({ open, onClose, onToast }) {
               } else {
                 onToast('Erro ao autenticar com Facebook: ' + err.message, 'error');
               }
-            });
+      }, { scope: 'public_profile' });
         } else {
           const reason = response.status ? ` (status: ${response.status})` : '';
           onToast('Login do Facebook cancelado' + reason, 'error');
