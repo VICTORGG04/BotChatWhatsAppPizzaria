@@ -90,7 +90,7 @@ export default function AuthModal({ open, onClose, onToast }) {
           const reason = response.status ? ` (status: ${response.status})` : '';
           onToast('Login do Facebook cancelado' + reason, 'error');
         }
-      }, { scope: 'public_profile,email' });
+      });
     } catch (err) {
       onToast('Erro ao chamar Facebook: ' + err.message, 'error');
       return;
